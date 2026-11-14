@@ -1,0 +1,1277 @@
+<title>Raízes da Família</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Literata:opsz,wght@7..72,500;7..72,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one-screen app. Top bar, tree canvas (pan/zoom) on the left, person panel on the right; on phones the panel is a bottom sheet. */
+:root {
+  --bg: #eef1ec;
+  --surface: #fbfcf9;
+  --surface-2: #f3f6f1;
+  --ink: #1d2a2f;
+  --muted: #5d6a64;
+  --line: #c8d1c9;
+  --accent: #2c6a4d;
+  --accent-ink: #ffffff;
+  --accent-soft: #dbe9e0;
+  --male: #44689c;
+  --female: #a34f77;
+  --unknown: #8a948f;
+  --danger: #a33a2c;
+  --danger-soft: #f6e1dd;
+  --edge: #8f9c95;
+  --shadow: 0 1px 2px rgba(29, 42, 47, .08), 0 4px 14px rgba(29, 42, 47, .06);
+  --font-display: "Literata", Georgia, "Times New Roman", serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111715; --surface: #18201d; --surface-2: #1e2723; --ink: #e3e9e5; --muted: #98a59e;
+    --line: #2f3a35; --accent: #72c096; --accent-ink: #0f1a15; --accent-soft: #1f3a2d;
+    --male: #86a9dc; --female: #df8fb4; --unknown: #8d9892; --danger: #f08b7b; --danger-soft: #3a211d;
+    --edge: #5e6c65; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111715; --surface: #18201d; --surface-2: #1e2723; --ink: #e3e9e5; --muted: #98a59e;
+  --line: #2f3a35; --accent: #72c096; --accent-ink: #0f1a15; --accent-soft: #1f3a2d;
+  --male: #86a9dc; --female: #df8fb4; --unknown: #8d9892; --danger: #f08b7b; --danger-soft: #3a211d;
+  --edge: #5e6c65; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+  color-scheme: dark;
+}
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; overflow: hidden; }
+button, input, select, textarea { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { height: 100%; display: grid; grid-template-rows: auto 1fr; grid-template-columns: minmax(0, 1fr) 380px; }
+
+/* ---------- top bar ---------- */
+.bar {
+  grid-column: 1 / -1; display: flex; align-items: center; gap: 12px;
+  padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--surface); border-bottom: 1px solid var(--line); position: relative; z-index: 5;
+}
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand svg { flex: none; }
+.brand h1 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 19px; letter-spacing: -.01em; white-space: nowrap; }
+.brand .count { font-family: var(--font-data); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.search { position: relative; flex: 1; max-width: 360px; margin-left: auto; min-width: 0; }
+.search input { width: 100%; box-sizing: border-box; padding: 8px 12px 8px 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+.search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.results { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); max-height: 320px; overflow: auto; padding: 4px; }
+.results button { display: flex; width: 100%; justify-content: space-between; gap: 8px; text-align: left; background: none; border: 0; padding: 8px 10px; border-radius: 6px; cursor: pointer; }
+.results button:hover, .results button.active { background: var(--accent-soft); }
+.results .yrs { font-family: var(--font-data); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.results .none { padding: 10px; color: var(--muted); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; white-space: nowrap; font-weight: 500; }
+.btn:hover { border-color: var(--edge); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.danger { color: var(--danger); }
+.btn.danger.solid { background: var(--danger); border-color: var(--danger); color: var(--surface); }
+.btn.ghost { border-color: transparent; background: transparent; }
+.btn.ghost:hover { background: var(--surface-2); }
+.btn.sm { padding: 5px 9px; font-size: 13px; }
+.btn[disabled] { opacity: .5; cursor: default; }
+.menu-wrap { position: relative; }
+.menu { position: absolute; right: 0; top: calc(100% + 6px); width: 280px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 6px; z-index: 20; }
+.menu button { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 9px 10px; border-radius: 6px; cursor: pointer; }
+.menu button:hover { background: var(--surface-2); }
+.menu small { display: block; color: var(--muted); font-size: 12px; }
+.menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
+
+/* ---------- stage ---------- */
+.stage { position: relative; overflow: hidden; min-width: 0; background:
+  radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 1.2px) 0 0 / 22px 22px, var(--bg); }
+#tree { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+#tree.dragging { cursor: grabbing; }
+.card-bg { fill: var(--surface); stroke: var(--line); stroke-width: 1; }
+.node { cursor: pointer; }
+.node:hover .card-bg { stroke: var(--edge); }
+.node.selected .card-bg { stroke: var(--accent); stroke-width: 2.5; }
+.node.root .card-bg { fill: var(--accent-soft); }
+.node .nm { font-family: var(--font-display); font-weight: 600; font-size: 14px; fill: var(--ink); }
+.node .sn { font-family: var(--font-body); font-size: 12.5px; fill: var(--ink); }
+.node .dt { font-family: var(--font-data); font-size: 11px; fill: var(--muted); }
+.node .ini { font-family: var(--font-body); font-weight: 600; font-size: 13px; fill: var(--surface); }
+.node .tag { font-family: var(--font-body); font-size: 10px; font-weight: 600; letter-spacing: .06em; fill: var(--accent); }
+.av-ring.M { stroke: var(--male); } .av-fill.M { fill: var(--male); }
+.av-ring.F { stroke: var(--female); } .av-fill.F { fill: var(--female); }
+.av-ring.U { stroke: var(--unknown); } .av-fill.U { fill: var(--unknown); }
+.av-ring { fill: none; stroke-width: 2; }
+.edge { fill: none; stroke: var(--edge); stroke-width: 1.5; }
+.edge.hl { stroke: var(--accent); stroke-width: 2.5; }
+.union { fill: var(--edge); }
+.union.hl { fill: var(--accent); }
+
+.zoom { position: absolute; left: 14px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 4px; }
+.zoom .btn { width: 38px; height: 38px; padding: 0; box-shadow: var(--shadow); font-size: 18px; }
+.legend { position: absolute; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 12px; font-size: 12px; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+.empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; }
+.empty-card { max-width: 420px; text-align: center; display: grid; gap: 14px; justify-items: center; }
+.empty-card h2 { margin: 0; font-family: var(--font-display); font-size: 26px; text-wrap: balance; }
+.empty-card p { margin: 0; color: var(--muted); font-size: 15px; text-wrap: pretty; }
+.empty-card svg { max-width: 100%; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
+.notice { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--muted); box-shadow: var(--shadow); max-width: calc(100% - 32px); }
+
+/* ---------- panel ---------- */
+.panel { background: var(--surface); border-left: 1px solid var(--line); overflow-y: auto; min-width: 0; overscroll-behavior: contain; }
+.panel-inner { padding: 20px 20px calc(28px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 18px; }
+.sheet-handle { display: none; }
+.eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.ph { display: flex; gap: 14px; align-items: center; }
+.ph-av { width: 72px; height: 72px; border-radius: 50%; flex: none; display: grid; place-items: center; font-weight: 600; font-size: 22px; color: var(--surface); overflow: hidden; border: 3px solid var(--surface); box-shadow: 0 0 0 2px var(--line); }
+.ph-av img { width: 100%; height: 100%; object-fit: cover; }
+.ph-av.M { background: var(--male); } .ph-av.F { background: var(--female); } .ph-av.U { background: var(--unknown); }
+.ph h2 { margin: 0; font-family: var(--font-display); font-size: 22px; line-height: 1.2; text-wrap: balance; }
+.kin { display: inline-block; margin-top: 4px; font-size: 12.5px; font-weight: 500; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 99px; }
+.facts { display: grid; gap: 10px; margin: 0; }
+.fact { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: baseline; }
+.fact .sym { font-family: var(--font-data); color: var(--muted); text-align: center; }
+.fact dt { font-size: 12px; color: var(--muted); }
+.fact dd { margin: 0; }
+.fact .date { font-family: var(--font-data); font-size: 13px; }
+.notes { white-space: pre-wrap; background: var(--surface-2); border-radius: 8px; padding: 10px 12px; margin: 0; }
+.section { display: grid; gap: 8px; }
+.section-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.chips { display: grid; gap: 6px; }
+.chip { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.chip .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.chip .dot.M { background: var(--male); } .chip .dot.F { background: var(--female); } .chip .dot.U { background: var(--unknown); }
+.chip .who { flex: 1; min-width: 0; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
+.chip .who strong { font-weight: 500; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip .who span { font-family: var(--font-data); font-size: 11.5px; color: var(--muted); }
+.chip .x { border: 0; background: none; color: var(--muted); cursor: pointer; width: 28px; height: 28px; border-radius: 6px; flex: none; }
+.chip .x:hover { background: var(--danger-soft); color: var(--danger); }
+.chip .mini { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 4px 6px; border-radius: 6px; white-space: nowrap; }
+.chip .mini:hover { background: var(--surface-2); color: var(--ink); }
+.empty-rel { color: var(--muted); font-size: 13px; margin: 0; }
+.adds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.confirm { background: var(--danger-soft); border-radius: 10px; padding: 12px; display: grid; gap: 10px; }
+.confirm p { margin: 0; }
+
+.list { display: grid; gap: 2px; }
+.list button { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; width: 100%; background: none; border: 0; text-align: left; padding: 8px 8px; border-radius: 6px; cursor: pointer; }
+.list button:hover { background: var(--surface-2); }
+.list .yrs { font-family: var(--font-data); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.list .grp { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 10px 8px 2px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--surface-2); border-radius: 8px; padding: 10px; }
+.stat b { display: block; font-family: var(--font-display); font-size: 22px; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--muted); }
+.hint { color: var(--muted); font-size: 13px; margin: 0; }
+
+/* forms */
+form { display: grid; gap: 14px; }
+.row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field label, .field .lbl { font-size: 12px; font-weight: 500; color: var(--muted); }
+.field input[type=text], .field select, .field textarea { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+.field textarea { min-height: 84px; resize: vertical; }
+.field .help { font-size: 11.5px; color: var(--muted); }
+fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px 12px; margin: 0; display: grid; gap: 10px; }
+legend { font-size: 12px; font-weight: 600; color: var(--muted); padding: 0 4px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg label { padding: 6px 12px; cursor: pointer; font-size: 13px; border-left: 1px solid var(--line); }
+.seg label:first-of-type { border-left: 0; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg input:checked + label { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -2px; }
+.check { display: flex; gap: 8px; align-items: center; }
+.tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 3px; border-radius: 9px; }
+.tabs button { flex: 1; border: 0; background: none; padding: 7px; border-radius: 7px; cursor: pointer; font-weight: 500; color: var(--muted); }
+.tabs button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.photo-row { display: flex; gap: 12px; align-items: center; }
+.photo-row .ph-av { width: 56px; height: 56px; font-size: 18px; }
+.err { color: var(--danger); font-size: 13px; margin: 0; }
+textarea.code { font-family: var(--font-data); font-size: 11px; min-height: 140px; }
+
+#toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: 13.5px; box-shadow: var(--shadow); z-index: 50; max-width: calc(100% - 32px); }
+
+@media (max-width: 760px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .brand h1 { font-size: 17px; }
+  .brand .count, .legend, .hide-sm, .brand h1 { display: none; }
+  .search { max-width: none; }
+  .bar { gap: 8px; }
+  .panel {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; max-height: 78%;
+    border-left: 0; border-top: 1px solid var(--line); border-radius: 16px 16px 0 0; box-shadow: 0 -8px 24px rgba(0,0,0,.12);
+    transform: translateY(calc(100% - 64px - env(safe-area-inset-bottom, 0px))); transition: transform .25s ease;
+  }
+  .panel.open { transform: none; }
+  .panel-inner { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 4px; }
+  .sheet-handle { display: flex; position: sticky; top: 0; z-index: 1; background: var(--surface); width: 100%; border: 0; padding: 10px 16px 8px; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+  .sheet-handle i { width: 40px; height: 4px; border-radius: 2px; background: var(--line); }
+  .sheet-handle span { font-size: 13px; color: var(--muted); }
+  .zoom { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) { .panel { transition: none; } }
+</style>
+
+<div class="app">
+  <header class="bar">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+        <circle cx="14" cy="6" r="3.2" fill="var(--accent)"/>
+        <circle cx="6" cy="21" r="3.2" fill="var(--male)"/>
+        <circle cx="22" cy="21" r="3.2" fill="var(--female)"/>
+        <path d="M14 9.5v5M6 17.5v-3h16v3" fill="none" stroke="var(--edge)" stroke-width="1.6"/>
+      </svg>
+      <h1>Raízes da Família</h1>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="text" placeholder="Buscar pessoa" autocomplete="off" aria-label="Buscar pessoa">
+      <div class="results" id="results" hidden></div>
+    </div>
+    <button class="btn primary edit-only" id="addBtn" type="button"><span aria-hidden="true">+</span><span class="hide-sm">Pessoa</span></button>
+    <div class="menu-wrap">
+      <button class="btn" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false">Dados<span aria-hidden="true">▾</span></button>
+      <div class="menu" id="menu" hidden>
+        <button type="button" data-act="excalidraw-copy">Copiar para o Excalidraw<small>Depois é só colar (Ctrl+V) em excalidraw.com para enfeitar e imprimir</small></button>
+        <button type="button" data-act="excalidraw">Baixar arquivo do Excalidraw<small>Para abrir pelo menu Abrir do Excalidraw</small></button>
+        <hr>
+        <button type="button" data-act="backup">Baixar cópia de segurança<small>Arquivo .json com todas as pessoas</small></button>
+        <button type="button" data-act="restore" class="edit-only">Restaurar cópia de segurança<small>Junta um arquivo .json com a árvore atual</small></button>
+      </div>
+    </div>
+    <input type="file" id="restoreFile" accept=".json,application/json" hidden>
+  </header>
+
+  <main class="stage" id="stage">
+    <svg id="tree" aria-label="Árvore genealógica">
+      <defs>
+        <clipPath id="avclip" clipPathUnits="objectBoundingBox"><circle cx=".5" cy=".5" r=".5"/></clipPath>
+      </defs>
+      <g id="viewport"><g id="edges"></g><g id="nodes"></g></g>
+    </svg>
+    <div class="loading" id="loading">Abrindo sua árvore…</div>
+    <div class="empty" id="empty" hidden>
+      <div class="empty-card">
+        <svg width="240" height="120" viewBox="0 0 240 120" aria-hidden="true">
+          <g fill="var(--surface)" stroke="var(--line)" stroke-dasharray="4 3">
+            <rect x="10" y="8" width="96" height="34" rx="8"/><rect x="134" y="8" width="96" height="34" rx="8"/>
+          </g>
+          <path d="M58 42v18h124V42M120 60v18" fill="none" stroke="var(--edge)" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <circle cx="120" cy="60" r="4" fill="var(--edge)"/>
+          <rect x="72" y="78" width="96" height="34" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>
+          <text x="120" y="100" text-anchor="middle" font-family="var(--font-display)" font-weight="600" font-size="13" fill="var(--accent)">Você</text>
+        </svg>
+        <h2>Comece por você</h2>
+        <p>Cadastre a si mesmo e depois vá ligando pais, avós, irmãos e filhos. A árvore se organiza sozinha a cada pessoa nova.</p>
+        <button class="btn primary edit-only" type="button" id="startBtn">Adicionar a primeira pessoa</button>
+      </div>
+    </div>
+    <div class="notice" id="notice" hidden></div>
+    <div class="zoom" id="zoomCtl" hidden>
+      <button class="btn" type="button" data-z="in" aria-label="Aproximar">+</button>
+      <button class="btn" type="button" data-z="out" aria-label="Afastar">−</button>
+      <button class="btn" type="button" data-z="fit" aria-label="Ver a árvore inteira">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
+    </div>
+    <div class="legend" id="legend" hidden>
+      <span><i style="background:var(--male)"></i>homem</span>
+      <span><i style="background:var(--female)"></i>mulher</span>
+      <span><b style="font-family:var(--font-data);font-weight:400">*</b> nasc.</span>
+      <span><b style="font-family:var(--font-data);font-weight:400">†</b> falec.</span>
+    </div>
+  </main>
+
+  <aside class="panel" id="panel" aria-label="Detalhes">
+    <button class="sheet-handle" id="handle" type="button" aria-label="Abrir ou fechar painel"><i></i><span id="handleText">Pessoas</span></button>
+    <div class="panel-inner" id="panelInner"></div>
+  </aside>
+</div>
+<div id="toast" role="status" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
+<script>
+(() => {
+"use strict";
+
+/* ================= state ================= */
+const S = {
+  people: new Map(),     // id -> person
+  families: new Map(),   // id -> { partners:[], children:[], marriageDate, marriagePlace }
+  settings: { rootId: null },
+  selected: null,
+  view: { mode: "overview" }, // overview | person | edit | family | confirmDelete | export
+  canWrite: true,
+  loaded: false,
+  storeKind: null,
+  layout: null,
+  t: { x: 0, y: 0, k: 1 },
+  fittedOnce: false,
+};
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const uid = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const isPhone = () => window.matchMedia("(max-width: 760px)").matches;
+
+/* ================= storage ================= */
+const LS_KEY = "raizes-da-familia-v1";
+const Store = {
+  kind: null, db: null, assets: null, downloads: null,
+  local: { people: {}, families: {}, meta: {} },
+  async put(col, id, data) {
+    if (this.kind === "db") return this.db.doc(col + "/" + id).set(data);
+    this.local[col][id] = data; this.saveLocal(); applyLocal();
+  },
+  async del(col, id) {
+    if (this.kind === "db") return this.db.doc(col + "/" + id).delete();
+    delete this.local[col][id]; this.saveLocal(); applyLocal();
+  },
+  saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(this.local)); } catch (e) { /* private window */ } },
+  loadLocal() {
+    try { const raw = localStorage.getItem(LS_KEY); if (raw) this.local = Object.assign({ people: {}, families: {}, meta: {} }, JSON.parse(raw)); } catch (e) { /* ignore */ }
+  },
+};
+function applyLocal() {
+  S.people = new Map(Object.entries(Store.local.people));
+  S.families = new Map(Object.entries(Store.local.families));
+  S.settings = Object.assign({ rootId: null }, Store.local.meta.settings || {});
+  S.loaded = true; renderAll();
+}
+const putPerson = (id, p) => Store.put("people", id, p);
+const putFamily = (id, f) => Store.put("families", id, f);
+const putSettings = (s) => Store.kind === "db" ? Store.db.doc("meta/settings").set(s) : (Store.local.meta.settings = s, Store.saveLocal(), applyLocal());
+
+async function boot() {
+  let db = null;
+  if (window.claude && typeof window.claude.use === "function") {
+    try { db = await window.claude.use("db"); } catch (e) { db = null; }
+  }
+  if (!db) {
+    Store.kind = "local"; Store.loadLocal(); applyLocal();
+    showNotice("Modo local: os dados ficam só neste navegador. Baixe uma cópia de segurança de vez em quando.", 0);
+    return;
+  }
+  Store.kind = "db"; Store.db = db;
+  window.claude.use("assets").then((a) => { Store.assets = a; renderPanel(); }).catch(() => {});
+  window.claude.use("downloads").then((d) => { Store.downloads = d; }).catch(() => {});
+  window.claude.use("user").then(async (u) => {
+    if (!u) return;
+    try { const ok = await u.canEdit(); S.canWrite = !!ok; document.body.classList.toggle("readonly", !ok); renderAll(); } catch (e) { /* keep */ }
+  }).catch(() => {});
+
+  const got = { people: false, families: false, meta: false };
+  const timer = setTimeout(() => {
+    if (!S.loaded) { $("#loading").textContent = "Não consegui carregar os dados ainda. Verifique a conexão; a página tenta de novo sozinha."; }
+  }, 10000);
+  const ready = () => { if (got.people && got.families && got.meta) { clearTimeout(timer); S.loaded = true; renderAll(); } };
+  const onErr = (e) => { clearTimeout(timer); showNotice("Os dados pararam de sincronizar (" + (e && e.code || "erro") + "). Recarregue a página.", 0); };
+  db.collection("people").onSnapshot((snap) => {
+    const m = new Map(); snap.docs.forEach((d) => m.set(d.id, structuredClone(d.data())));
+    S.people = m; got.people = true; S.loaded ? renderAll() : ready();
+  }, onErr);
+  db.collection("families").onSnapshot((snap) => {
+    const m = new Map(); snap.docs.forEach((d) => m.set(d.id, structuredClone(d.data())));
+    S.families = m; got.families = true; S.loaded ? renderAll() : ready();
+  }, onErr);
+  db.doc("meta/settings").onSnapshot((d) => {
+    S.settings = Object.assign({ rootId: null }, d.exists ? d.data() : {}); got.meta = true; S.loaded ? renderAll() : ready();
+  }, onErr);
+}
+
+/* ================= model helpers ================= */
+const P = (id) => S.people.get(id);
+const fullName = (p) => p ? [p.given, p.surname].filter(Boolean).join(" ") || "Sem nome" : "?";
+const yearOf = (s) => { const m = String(s || "").match(/(\d{4})/); return m ? +m[1] : null; };
+const sexOf = (p) => (p && (p.sex === "M" || p.sex === "F")) ? p.sex : "U";
+const initials = (p) => ((((p.given || "").trim()[0] || "") + ((p.surname || "").trim()[0] || "")).toUpperCase() || "?");
+function lifespan(p, long) {
+  const b = yearOf(p.birthDate), d = yearOf(p.deathDate);
+  const parts = [];
+  if (b) parts.push("* " + b);
+  if (d) parts.push("† " + d);
+  else if (!p.living && !b) parts.push("†");
+  if (!parts.length) return p.living ? "vivo(a)" : "";
+  return parts.join(long ? "  ·  " : " · ");
+}
+const famsAsChild = (id) => [...S.families.entries()].filter(([, f]) => (f.children || []).includes(id));
+const famsAsPartner = (id) => [...S.families.entries()].filter(([, f]) => (f.partners || []).includes(id));
+const parentsOf = (id) => [...new Set(famsAsChild(id).flatMap(([, f]) => f.partners || []))].filter((x) => S.people.has(x));
+const childrenOf = (id) => [...new Set(famsAsPartner(id).flatMap(([, f]) => f.children || []))].filter((x) => S.people.has(x));
+const partnersOf = (id) => [...new Set(famsAsPartner(id).flatMap(([, f]) => f.partners || []))].filter((x) => x !== id && S.people.has(x));
+const siblingsOf = (id) => [...new Set(famsAsChild(id).flatMap(([, f]) => f.children || []))].filter((x) => x !== id && S.people.has(x));
+const byBirth = (a, b) => (yearOf(P(a)?.birthDate) ?? 9999) - (yearOf(P(b)?.birthDate) ?? 9999);
+const photoSrc = (p) => !p.photo ? null : (p.photo.startsWith("data:") ? p.photo : "/_blob/" + p.photo);
+
+/* ---- kinship relative to "me" (Portuguese terms) ---- */
+function ancestorsWithGen(id) {
+  const out = new Map([[id, 0]]); const q = [id];
+  while (q.length) { const x = q.shift(); for (const p of parentsOf(x)) if (!out.has(p)) { out.set(p, out.get(x) + 1); q.push(p); } }
+  return out;
+}
+function bloodLink(a, b) {
+  const A = ancestorsWithGen(a), B = ancestorsWithGen(b);
+  let best = null;
+  for (const [x, ga] of A) if (B.has(x)) { const s = ga + B.get(x); if (!best || s < best.s) best = { up: ga, down: B.get(x), s }; }
+  return best;
+}
+function kinName(up, down, sex) {
+  const g = (m, f, u) => sex === "M" ? m : sex === "F" ? f : u;
+  const deg = (n) => n + "º";
+  if (up === 0 && down === 0) return "Você";
+  if (up === 0) return [null, g("Filho", "Filha", "Filho(a)"), g("Neto", "Neta", "Neto(a)"), g("Bisneto", "Bisneta", "Bisneto(a)"), g("Trineto", "Trineta", "Trineto(a)"), g("Tetraneto", "Tetraneta", "Tetraneto(a)")][down] || `Descendente (${down}ª geração)`;
+  if (down === 0) return [null, g("Pai", "Mãe", "Pai/Mãe"), g("Avô", "Avó", "Avô/Avó"), g("Bisavô", "Bisavó", "Bisavô/Bisavó"), g("Trisavô", "Trisavó", "Trisavô/Trisavó"), g("Tetravô", "Tetravó", "Tetravô/Tetravó")][up] || `Ancestral (${up} gerações acima)`;
+  if (up === 1 && down === 1) return g("Irmão", "Irmã", "Irmão/Irmã");
+  if (down === 1) return [null, null, g("Tio", "Tia", "Tio(a)"), g("Tio-avô", "Tia-avó", "Tio(a)-avô(ó)"), g("Tio-bisavô", "Tia-bisavó", "Tio(a)-bisavô(ó)")][up] || "Parente colateral";
+  if (up === 1) return [null, null, g("Sobrinho", "Sobrinha", "Sobrinho(a)"), g("Sobrinho-neto", "Sobrinha-neta", "Sobrinho(a)-neto(a)"), g("Sobrinho-bisneto", "Sobrinha-bisneta", "Sobrinho(a)-bisneto(a)")][down] || "Parente colateral";
+  const cousin = g("Primo", "Prima", "Primo(a)");
+  const n = Math.min(up, down) - 1;
+  const base = n === 1 ? cousin : `${cousin} de ${deg(n)} grau`;
+  if (up === down) return base;
+  const diff = Math.abs(up - down);
+  return `${base}, ${diff} ${diff === 1 ? "geração" : "gerações"} ${down > up ? "abaixo" : "acima"}`;
+}
+function kinship(rootId, id) {
+  if (!rootId || !S.people.has(rootId) || !S.people.has(id)) return null;
+  const sex = sexOf(P(id));
+  const g = (m, f, u) => sex === "M" ? m : sex === "F" ? f : u;
+  if (rootId === id) return "Você";
+  const bl = bloodLink(rootId, id);
+  if (bl) return kinName(bl.up, bl.down, sex);
+  if (partnersOf(rootId).includes(id)) return g("Marido", "Esposa", "Cônjuge");
+  for (const sp of partnersOf(rootId)) {
+    const l = bloodLink(sp, id);
+    if (!l) continue;
+    if (l.up === 1 && l.down === 0) return g("Sogro", "Sogra", "Sogro(a)");
+    if (l.up === 1 && l.down === 1) return g("Cunhado", "Cunhada", "Cunhado(a)");
+    if (l.up === 0 && l.down === 1) return g("Enteado", "Enteada", "Enteado(a)");
+    return kinName(l.up, l.down, sex).toLowerCase() + " do cônjuge";
+  }
+  for (const sp of partnersOf(id)) {
+    const l = bloodLink(rootId, sp);
+    if (!l) continue;
+    if (l.up === 0 && l.down === 1) return g("Genro", "Nora", "Genro/Nora");
+    if (l.up === 1 && l.down === 1) return g("Cunhado", "Cunhada", "Cunhado(a)");
+    if (l.up === 1 && l.down === 0) return g("Padrasto", "Madrasta", "Padrasto/Madrasta");
+    return `Cônjuge de ${kinName(l.up, l.down, sexOf(P(sp))).toLowerCase()}`;
+  }
+  return null;
+}
+
+/* ================= relationship edits ================= */
+async function saveFamOrDrop(fid, f) {
+  const partners = (f.partners || []).filter((x) => S.people.has(x));
+  const children = (f.children || []).filter((x) => S.people.has(x));
+  const keep = (partners.length >= 2) || (partners.length === 1 && children.length >= 1) || (partners.length === 0 && children.length >= 2);
+  if (keep) await putFamily(fid, { ...f, partners, children });
+  else if (S.families.has(fid)) await Store.del("families", fid);
+}
+function soloFamily(pid) { return famsAsPartner(pid).find(([, f]) => f.partners.length === 1); }
+function coupleFamily(a, b) { return famsAsPartner(a).find(([, f]) => f.partners.includes(b)); }
+
+async function addParent(childId, parentId) {
+  if (childId === parentId) throw new Error("Uma pessoa não pode ser pai ou mãe de si mesma.");
+  if (ancestorsWithGen(parentId).has(childId)) throw new Error("Essa ligação criaria um ciclo na árvore.");
+  const asChild = famsAsChild(childId);
+  if (asChild.some(([, f]) => f.partners.includes(parentId))) return;
+  const [fid, f] = asChild[0] || [];
+  if (f) {
+    if (f.partners.length >= 2) throw new Error(`${fullName(P(childId))} já tem pai e mãe cadastrados.`);
+    if (f.partners.length === 1) {
+      const couple = coupleFamily(f.partners[0], parentId);
+      if (couple) {
+        await saveFamOrDrop(fid, { ...f, children: f.children.filter((c) => c !== childId) });
+        await putFamily(couple[0], { ...couple[1], children: [...couple[1].children, childId] });
+        return;
+      }
+    }
+    await putFamily(fid, { ...f, partners: [...f.partners, parentId] });
+    return;
+  }
+  const solo = soloFamily(parentId);
+  if (solo) await putFamily(solo[0], { ...solo[1], children: [...solo[1].children, childId] });
+  else await putFamily(uid("f"), { partners: [parentId], children: [childId], marriageDate: "", marriagePlace: "" });
+}
+async function addPartner(a, b) {
+  if (a === b) throw new Error("Escolha outra pessoa.");
+  if (coupleFamily(a, b)) return;
+  const sa = soloFamily(a), sb = soloFamily(b);
+  if (sa) {
+    const children = [...sa[1].children];
+    if (sb) { children.push(...sb[1].children.filter((c) => !children.includes(c))); await Store.del("families", sb[0]); }
+    await putFamily(sa[0], { ...sa[1], partners: [a, b], children });
+  } else if (sb) {
+    await putFamily(sb[0], { ...sb[1], partners: [b, a] });
+  } else {
+    await putFamily(uid("f"), { partners: [a, b], children: [], marriageDate: "", marriagePlace: "" });
+  }
+}
+async function addChild(parentId, childId, famChoice) {
+  if (childId === parentId) throw new Error("Escolha outra pessoa.");
+  if (ancestorsWithGen(parentId).has(childId)) throw new Error("Essa ligação criaria um ciclo na árvore.");
+  if (famChoice && S.families.has(famChoice)) {
+    const f = S.families.get(famChoice);
+    if (f.children.includes(childId)) return;
+    if (famsAsChild(childId).length) throw new Error(`${fullName(P(childId))} já está ligado(a) a outros pais. Remova essa ligação antes.`);
+    await putFamily(famChoice, { ...f, children: [...f.children, childId] });
+    return;
+  }
+  await addParent(childId, parentId);
+}
+async function addSibling(personId, sibId) {
+  if (personId === sibId) throw new Error("Escolha outra pessoa.");
+  const fam = famsAsChild(personId)[0];
+  if (famsAsChild(sibId).length && !(fam && fam[1].children.includes(sibId))) throw new Error(`${fullName(P(sibId))} já está ligado(a) a outros pais.`);
+  if (fam) { if (!fam[1].children.includes(sibId)) await putFamily(fam[0], { ...fam[1], children: [...fam[1].children, sibId] }); }
+  else await putFamily(uid("f"), { partners: [], children: [personId, sibId], marriageDate: "", marriagePlace: "" });
+}
+async function unlinkParent(childId, parentId) {
+  for (const [fid, f] of famsAsChild(childId)) if (f.partners.includes(parentId)) {
+    if (f.children.length === 1) await saveFamOrDrop(fid, { ...f, partners: f.partners.filter((x) => x !== parentId) });
+    else {
+      await putFamily(fid, { ...f, children: f.children.filter((c) => c !== childId) });
+      const others = f.partners.filter((x) => x !== parentId);
+      if (others.length) await putFamily(uid("f"), { partners: others, children: [childId], marriageDate: "", marriagePlace: "" });
+    }
+  }
+}
+async function unlinkChild(parentId, childId) { return unlinkParent(childId, parentId); }
+async function unlinkPartner(a, b) {
+  const c = coupleFamily(a, b); if (!c) return;
+  const [fid, f] = c;
+  if (f.children.length) throw new Error("Esse casal tem filhos cadastrados. Remova os filhos do casal antes de desfazer a união.");
+  await Store.del("families", fid);
+}
+async function unlinkSibling(a, b) {
+  for (const [fid, f] of famsAsChild(a)) if (f.children.includes(b)) {
+    if (f.partners.length) throw new Error("Irmãos são ligados pelos pais. Para separar, remova o pai ou a mãe de um deles.");
+    await saveFamOrDrop(fid, { ...f, children: f.children.filter((c) => c !== b) });
+  }
+}
+async function deletePerson(id) {
+  for (const [fid, f] of [...S.families.entries()]) {
+    if (f.partners.includes(id) || f.children.includes(id)) {
+      const nf = { ...f, partners: f.partners.filter((x) => x !== id), children: f.children.filter((x) => x !== id) };
+      const partners = nf.partners, children = nf.children;
+      const keep = (partners.length >= 2) || (partners.length === 1 && children.length >= 1) || (partners.length === 0 && children.length >= 2);
+      if (keep) await putFamily(fid, nf); else await Store.del("families", fid);
+    }
+  }
+  const p = P(id);
+  await Store.del("people", id);
+  if (S.settings.rootId === id) await putSettings({ ...S.settings, rootId: null });
+  if (p && p.photo && !p.photo.startsWith("data:") && Store.assets) Store.assets.delete(p.photo).catch(() => {});
+}
+
+/* ================= layout ================= */
+const W = 196, H = 64, UNION = 8;
+function computeLayout() {
+  if (!S.people.size || typeof dagre === "undefined") return null;
+  const g = new dagre.graphlib.Graph();
+  g.setGraph({ rankdir: "TB", nodesep: 26, ranksep: 34, marginx: 40, marginy: 40 });
+  g.setDefaultEdgeLabel(() => ({}));
+  for (const id of S.people.keys()) g.setNode(id, { width: W, height: H });
+  const fams = [];
+  for (const [fid, f] of S.families) {
+    const partners = (f.partners || []).filter((x) => S.people.has(x));
+    const children = (f.children || []).filter((x) => S.people.has(x)).sort(byBirth);
+    if (partners.length + children.length < 2) continue;
+    const n = "f:" + fid; g.setNode(n, { width: UNION, height: UNION });
+    partners.forEach((p) => g.setEdge(p, n, { weight: 3, minlen: 1 }));
+    children.forEach((c) => g.setEdge(n, c, { weight: 1, minlen: 1 }));
+    fams.push({ fid, n, partners, children });
+  }
+  dagre.layout(g);
+  const nodes = new Map();
+  for (const id of S.people.keys()) { const n = g.node(id); nodes.set(id, { x: n.x, y: n.y }); }
+  const unions = fams.map((f) => { const n = g.node(f.n); return { ...f, x: n.x, y: n.y }; });
+  const gr = g.graph();
+  return { nodes, unions, width: gr.width || 400, height: gr.height || 300 };
+}
+
+/* ================= render: tree ================= */
+const SVGNS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs, parent) {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const trunc = (s, n) => s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s;
+
+function lineagePath(id) {
+  // ancestors and descendants of the selected person, to highlight their direct line
+  const set = new Set([id]);
+  const up = [id]; while (up.length) { const x = up.pop(); for (const p of parentsOf(x)) if (!set.has(p)) { set.add(p); up.push(p); } }
+  const dn = [id]; const seen = new Set([id]); while (dn.length) { const x = dn.pop(); for (const c of childrenOf(x)) if (!seen.has(c)) { seen.add(c); set.add(c); dn.push(c); } }
+  return set;
+}
+
+function renderTree() {
+  const edgesG = $("#edges"), nodesG = $("#nodes");
+  edgesG.replaceChildren(); nodesG.replaceChildren();
+  const L = S.layout = computeLayout();
+  if (!L) return;
+  const line = S.selected && S.people.has(S.selected) ? lineagePath(S.selected) : null;
+
+  for (const u of L.unions) {
+    const famHl = line && u.children.some((c) => line.has(c)) && u.partners.some((p) => line.has(p));
+    for (const p of u.partners) {
+      const n = L.nodes.get(p);
+      const hl = famHl && line.has(p);
+      svgEl("path", { class: "edge" + (hl ? " hl" : ""), d: `M${n.x},${n.y + H / 2} V${u.y} H${u.x}` }, edgesG);
+    }
+    for (const c of u.children) {
+      const n = L.nodes.get(c);
+      const mid = u.y + (n.y - H / 2 - u.y) / 2;
+      const hl = famHl && line.has(c);
+      svgEl("path", { class: "edge" + (hl ? " hl" : ""), d: `M${u.x},${u.y} V${mid} H${n.x} V${n.y - H / 2}` }, edgesG);
+    }
+    svgEl("circle", { class: "union" + (famHl ? " hl" : ""), cx: u.x, cy: u.y, r: 4.5 }, edgesG);
+  }
+
+  for (const [id, pos] of L.nodes) {
+    const p = P(id), sx = sexOf(p);
+    const g = svgEl("g", { class: "node" + (id === S.selected ? " selected" : "") + (id === S.settings.rootId ? " root" : ""), transform: `translate(${pos.x - W / 2},${pos.y - H / 2})`, "data-id": id, tabindex: "0", role: "button", "aria-label": fullName(p) }, nodesG);
+    svgEl("rect", { class: "card-bg", width: W, height: H, rx: 10 }, g);
+    const cx = 30, cy = H / 2, r = 19;
+    const src = photoSrc(p);
+    if (src) {
+      svgEl("image", { href: src, x: cx - r, y: cy - r, width: r * 2, height: r * 2, "clip-path": "url(#avclip)", preserveAspectRatio: "xMidYMid slice" }, g);
+    } else {
+      svgEl("circle", { class: "av-fill " + sx, cx, cy, r }, g);
+      const t = svgEl("text", { class: "ini", x: cx, y: cy + 4.5, "text-anchor": "middle" }, g);
+      t.textContent = initials(p);
+    }
+    svgEl("circle", { class: "av-ring " + sx, cx, cy, r: r + 2.5 }, g);
+    const x0 = 58;
+    const given = svgEl("text", { class: "nm", x: x0, y: 22 }, g); given.textContent = trunc(p.given || "Sem nome", 19);
+    const sn = svgEl("text", { class: "sn", x: x0, y: 38 }, g); sn.textContent = trunc(p.surname || "", 22);
+    const dt = svgEl("text", { class: "dt", x: x0, y: 54 }, g); dt.textContent = lifespan(p);
+    if (id === S.settings.rootId) { const tg = svgEl("text", { class: "tag", x: W - 10, y: 15, "text-anchor": "end" }, g); tg.textContent = "VOCÊ"; }
+  }
+  applyTransform();
+  if (!S.fittedOnce) { S.fittedOnce = true; requestAnimationFrame(() => S.settings.rootId && S.people.has(S.settings.rootId) ? centerOn(S.settings.rootId, 1) : fit()); }
+}
+
+/* ---- pan & zoom ---- */
+const svg = $("#tree"), vp = $("#viewport");
+function applyTransform() { vp.setAttribute("transform", `translate(${S.t.x},${S.t.y}) scale(${S.t.k})`); }
+function fit() {
+  const L = S.layout; if (!L) return;
+  const r = svg.getBoundingClientRect();
+  const padBottom = isPhone() ? 70 : 0;
+  const k = Math.min(1.1, Math.max(0.2, Math.min(r.width / L.width, (r.height - padBottom) / L.height)));
+  S.t = { k, x: (r.width - L.width * k) / 2, y: Math.max(0, (r.height - padBottom - L.height * k) / 2) };
+  applyTransform();
+}
+function centerOn(id, k) {
+  const L = S.layout; if (!L || !L.nodes.has(id)) return;
+  const n = L.nodes.get(id), r = svg.getBoundingClientRect();
+  const kk = k || Math.max(S.t.k, 0.8);
+  const visibleH = isPhone() && $("#panel").classList.contains("open") ? r.height * 0.35 : (isPhone() ? r.height - 70 : r.height);
+  S.t = { k: kk, x: r.width / 2 - n.x * kk, y: visibleH / 2 - n.y * kk };
+  applyTransform();
+}
+function zoomAt(f, cx, cy) {
+  const k = Math.min(2.5, Math.max(0.15, S.t.k * f));
+  const ratio = k / S.t.k;
+  S.t = { k, x: cx - (cx - S.t.x) * ratio, y: cy - (cy - S.t.y) * ratio };
+  applyTransform();
+}
+svg.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const r = svg.getBoundingClientRect();
+  const cx = e.clientX - r.left, cy = e.clientY - r.top;
+  if (e.ctrlKey) return zoomAt(Math.exp(-e.deltaY * 0.01), cx, cy);           // trackpad pinch
+  const trackpad = e.deltaMode === 0 && (Math.abs(e.deltaX) > 0 || !Number.isInteger(e.deltaY));
+  if (trackpad) { S.t.x -= e.deltaX; S.t.y -= e.deltaY; applyTransform(); }  // two-finger scroll pans
+  else zoomAt(Math.exp(-e.deltaY * 0.0015 * (e.deltaMode ? 33 : 1)), cx, cy); // mouse wheel zooms
+}, { passive: false });
+const ptrs = new Map(); let drag = null, pinch = null;
+svg.addEventListener("pointerdown", (e) => {
+  svg.setPointerCapture(e.pointerId);
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (ptrs.size === 1) drag = { x: e.clientX, y: e.clientY, tx: S.t.x, ty: S.t.y, moved: false, target: e.target.closest(".node") };
+  if (ptrs.size === 2) {
+    const [a, b] = [...ptrs.values()];
+    pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), k: S.t.k }; drag = null;
+  }
+});
+svg.addEventListener("pointermove", (e) => {
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && ptrs.size === 2) {
+    const [a, b] = [...ptrs.values()];
+    const r = svg.getBoundingClientRect();
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    zoomAt((pinch.k * d / pinch.d) / S.t.k, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top);
+    return;
+  }
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.moved && Math.hypot(dx, dy) > 4) { drag.moved = true; svg.classList.add("dragging"); }
+  if (drag.moved) { S.t.x = drag.tx + dx; S.t.y = drag.ty + dy; applyTransform(); }
+});
+const endPtr = (e) => {
+  ptrs.delete(e.pointerId);
+  if (ptrs.size < 2) pinch = null;
+  if (drag && ptrs.size === 0) {
+    if (!drag.moved) {
+      if (drag.target) select(drag.target.dataset.id);
+      else if (S.selected) select(null);
+    }
+    drag = null; svg.classList.remove("dragging");
+  }
+};
+svg.addEventListener("pointerup", endPtr);
+svg.addEventListener("pointercancel", endPtr);
+svg.addEventListener("keydown", (e) => {
+  const n = e.target.closest && e.target.closest(".node");
+  if (n && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); select(n.dataset.id); }
+});
+$("#zoomCtl").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  const r = svg.getBoundingClientRect();
+  if (b.dataset.z === "in") zoomAt(1.25, r.width / 2, r.height / 2);
+  if (b.dataset.z === "out") zoomAt(0.8, r.width / 2, r.height / 2);
+  if (b.dataset.z === "fit") fit();
+});
+window.addEventListener("resize", () => { if (S.layout && !S.selected) fit(); });
+
+/* ================= selection & panel ================= */
+function select(id, opts = {}) {
+  S.selected = id && S.people.has(id) ? id : null;
+  S.view = S.selected ? { mode: "person" } : { mode: "overview" };
+  renderTree(); renderPanel(); $("#panel").scrollTop = 0;
+  if (S.selected) { setSheet(true); if (opts.center) centerOn(S.selected); }
+  else setSheet(false);
+}
+function setSheet(open) { $("#panel").classList.toggle("open", !!open); }
+$("#handle").addEventListener("click", () => setSheet(!$("#panel").classList.contains("open")));
+
+function personChip(id, opts = {}) {
+  const p = P(id); if (!p) return "";
+  const extra = opts.extra || "";
+  const x = opts.unlink && S.canWrite ? `<button class="x" type="button" data-unlink="${opts.unlink}" data-other="${id}" title="Remover esta ligação" aria-label="Remover ligação com ${esc(fullName(p))}">✕</button>` : "";
+  return `<div class="chip"><span class="dot ${sexOf(p)}"></span><button class="who" type="button" data-go="${id}"><strong>${esc(fullName(p))}</strong><span>${esc(lifespan(p) || " ")}</span></button>${extra}${x}</div>`;
+}
+function relSection(title, ids, unlinkKind, emptyText, mapExtra) {
+  return `<div class="section"><p class="eyebrow">${title}</p>${ids.length ? `<div class="chips">${ids.map((id) => personChip(id, { unlink: unlinkKind, extra: mapExtra ? mapExtra(id) : "" })).join("")}</div>` : `<p class="empty-rel">${emptyText}</p>`}</div>`;
+}
+function avatarHTML(p, cls = "ph-av") {
+  const src = photoSrc(p);
+  return `<div class="${cls} ${sexOf(p)}">${src ? `<img src="${esc(src)}" alt="">` : esc(initials(p))}</div>`;
+}
+
+function renderPanel() {
+  const el = $("#panelInner");
+  const v = S.view;
+  $("#handleText").textContent = S.selected ? fullName(P(S.selected)) : `${S.people.size} ${S.people.size === 1 ? "pessoa" : "pessoas"}`;
+  if (!S.loaded) { el.innerHTML = `<p class="hint">Carregando…</p>`; return; }
+  if (v.mode === "edit") return renderForm(el);
+  if (v.mode === "family") return renderFamilyForm(el);
+  if (v.mode === "export") return renderExportBox(el);
+  if (v.mode === "restore") return renderRestore(el);
+  if (S.selected && S.people.has(S.selected)) return renderPerson(el);
+  renderOverview(el);
+}
+
+function renderOverview(el) {
+  const ids = [...S.people.keys()];
+  const surnames = new Set(ids.map((i) => (P(i).surname || "").trim().split(/\s+/).pop()).filter(Boolean));
+  const L = S.layout;
+  let gens = 0;
+  if (L) { const ys = new Set([...L.nodes.values()].map((n) => Math.round(n.y))); gens = ys.size; }
+  const groups = new Map();
+  ids.sort((a, b) => fullName(P(a)).localeCompare(fullName(P(b)), "pt-BR")).forEach((id) => {
+    const k = (P(id).given || "?")[0].toUpperCase();
+    if (!groups.has(k)) groups.set(k, []); groups.get(k).push(id);
+  });
+  const root = S.settings.rootId && P(S.settings.rootId);
+  el.innerHTML = `
+    <div class="section">
+      <p class="eyebrow">Sua árvore</p>
+      <div class="stats">
+        <div class="stat"><b>${ids.length}</b><span>${ids.length === 1 ? "pessoa" : "pessoas"}</span></div>
+        <div class="stat"><b>${gens}</b><span>${gens === 1 ? "geração" : "gerações"}</span></div>
+        <div class="stat"><b>${surnames.size}</b><span>sobrenomes</span></div>
+      </div>
+    </div>
+    ${ids.length ? `<p class="hint">Toque numa pessoa na árvore para ver os dados dela e adicionar parentes.${root ? "" : " Abra a sua ficha e marque “Esta pessoa sou eu” para ver o parentesco de cada um."}</p>` : `<p class="hint">Ainda não há ninguém aqui. Use “+ Pessoa” para começar.</p>`}
+    ${ids.length ? `<div class="section"><p class="eyebrow">Todas as pessoas</p><div class="list">${[...groups].map(([k, arr]) => `<div class="grp">${esc(k)}</div>` + arr.map((id) => `<button type="button" data-go="${id}"><span>${esc(fullName(P(id)))}</span><span class="yrs">${esc(lifespan(P(id)))}</span></button>`).join("")).join("")}</div></div>` : ""}
+  `;
+}
+
+function renderPerson(el) {
+  const id = S.selected, p = P(id);
+  const kin = kinship(S.settings.rootId, id);
+  const fact = (sym, label, date, place) => (date || place) ? `<div class="fact"><span class="sym">${sym}</span><div><dt>${label}</dt><dd>${date ? `<span class="date">${esc(date)}</span>` : ""}${date && place ? " · " : ""}${place ? esc(place) : ""}</dd></div></div>` : "";
+  const parents = parentsOf(id), partners = partnersOf(id), kids = childrenOf(id).sort(byBirth), sibs = siblingsOf(id).sort(byBirth);
+  const marriageExtra = (pid) => {
+    const c = coupleFamily(id, pid); if (!c) return "";
+    const f = c[1]; const y = yearOf(f.marriageDate);
+    return S.canWrite ? `<button class="mini" type="button" data-fam="${c[0]}" title="Data e local da união">⚭ ${y || "data"}</button>` : (y ? `<span class="mini">⚭ ${y}</span>` : "");
+  };
+  const facts = [
+    fact("*", "Nascimento", p.birthDate, p.birthPlace),
+    fact("†", "Falecimento", p.deathDate, p.deathPlace),
+    p.occupation ? `<div class="fact"><span class="sym">◇</span><div><dt>Ocupação</dt><dd>${esc(p.occupation)}</dd></div></div>` : "",
+  ].join("");
+  const living = p.living ? `<div class="fact"><span class="sym">○</span><div><dt>Situação</dt><dd>Vivo(a)</dd></div></div>` : "";
+  const W_ = S.canWrite;
+  el.innerHTML = `
+    <div class="ph">
+      ${avatarHTML(p)}
+      <div style="min-width:0">
+        <h2>${esc(fullName(p))}</h2>
+        ${kin ? `<span class="kin">${esc(kin)}</span>` : ""}
+      </div>
+    </div>
+    ${(facts || living) ? `<dl class="facts">${facts}${living}</dl>` : `<p class="hint">Sem datas ou locais ainda.${W_ ? " Toque em Editar para completar." : ""}</p>`}
+    ${p.notes ? `<div class="section"><p class="eyebrow">Notas e histórias</p><p class="notes">${esc(p.notes)}</p></div>` : ""}
+    ${W_ ? `<div class="actions"><button class="btn" type="button" data-act="edit">Editar dados</button>${S.settings.rootId === id ? "" : `<button class="btn ghost" type="button" data-act="me">Esta pessoa sou eu</button>`}</div>` : ""}
+    ${relSection("Pais", parents, "parent", "Nenhum pai ou mãe cadastrado.")}
+    ${relSection("Cônjuges", partners, "partner", "Nenhum cônjuge cadastrado.", marriageExtra)}
+    ${relSection("Filhos", kids, "child", "Nenhum filho cadastrado.")}
+    ${relSection("Irmãos", sibs, "sibling", "Nenhum irmão cadastrado.")}
+    ${W_ ? `<div class="section"><p class="eyebrow">Adicionar parente</p><div class="adds">
+      <button class="btn" type="button" data-add="parent" ${parents.length >= 2 ? "disabled" : ""}>+ Pai ou mãe</button>
+      <button class="btn" type="button" data-add="partner">+ Cônjuge</button>
+      <button class="btn" type="button" data-add="child">+ Filho(a)</button>
+      <button class="btn" type="button" data-add="sibling">+ Irmão(ã)</button>
+    </div></div>` : ""}
+    ${W_ ? (v_confirm() ? `<div class="confirm"><p>Excluir <strong>${esc(fullName(p))}</strong>? As ligações com outras pessoas também serão apagadas.</p><div class="actions"><button class="btn danger solid" type="button" data-act="del-yes">Excluir</button><button class="btn" type="button" data-act="del-no">Cancelar</button></div></div>` : `<div><button class="btn danger ghost sm" type="button" data-act="del">Excluir pessoa</button></div>`) : ""}
+  `;
+}
+const v_confirm = () => S.view.confirmDelete === true;
+
+/* ---- person form ---- */
+const REL_LABEL = { parent: "pai ou mãe", partner: "cônjuge", child: "filho(a)", sibling: "irmão ou irmã" };
+function renderForm(el) {
+  const v = S.view;
+  const editing = v.id ? P(v.id) : null;
+  const p = editing || { given: "", surname: "", sex: "U", living: false, birthDate: "", birthPlace: "", deathDate: "", deathPlace: "", occupation: "", notes: "", photo: null };
+  if (!editing && v.rel && v.of) {
+    const base = P(v.of);
+    if (v.rel === "child" || v.rel === "sibling") p.surname = base?.surname || "";
+    const opposite = { M: "F", F: "M" };
+    if (v.rel === "partner") p.sex = opposite[sexOf(base)] || "U";
+    if (v.rel === "parent") { const other = parentsOf(v.of)[0]; p.sex = other ? (opposite[sexOf(P(other))] || "U") : "U"; }
+  }
+  if (!editing && v.photo !== undefined) p.photo = v.photo;
+  const of = v.of && P(v.of);
+  const title = editing ? "Editar dados" : v.rel ? `Novo ${REL_LABEL[v.rel]} de ${fullName(of)}` : "Nova pessoa";
+  const tab = v.tab || "new";
+  const candidates = [...S.people.keys()].filter((x) => x !== v.of).sort((a, b) => fullName(P(a)).localeCompare(fullName(P(b)), "pt-BR"));
+  let famSelect = "";
+  if (v.rel === "child") {
+    const opts = famsAsPartner(v.of).filter(([, f]) => f.partners.length === 2).map(([fid, f]) => {
+      const other = f.partners.find((x) => x !== v.of);
+      return `<option value="${fid}">${esc(fullName(P(other)))}</option>`;
+    });
+    if (opts.length) famSelect = `<div class="field"><label for="f-fam">Outro pai ou mãe</label><select id="f-fam">${opts.join("")}<option value="">Não informado</option></select></div>`;
+  }
+  const isFirst = !S.people.size && !editing;
+  el.innerHTML = `
+    <div class="section-head"><h2 style="margin:0;font-family:var(--font-display);font-size:20px;text-wrap:balance">${esc(title)}</h2></div>
+    ${v.rel && candidates.length ? `<div class="tabs" role="tablist"><button type="button" class="${tab === "new" ? "on" : ""}" data-tab="new">Pessoa nova</button><button type="button" class="${tab === "existing" ? "on" : ""}" data-tab="existing">Já cadastrada</button></div>` : ""}
+    ${tab === "existing" && v.rel ? `
+      <form id="linkForm" novalidate>
+        <div class="field"><label for="f-existing">Escolha a pessoa</label>
+          <select id="f-existing">${candidates.map((x) => `<option value="${x}">${esc(fullName(P(x)))}${lifespan(P(x)) ? " (" + esc(lifespan(P(x))) + ")" : ""}</option>`).join("")}</select></div>
+        ${famSelect}
+        <p class="err" id="formErr" hidden></p>
+        <div class="actions"><button class="btn primary" type="submit">Ligar</button><button class="btn" type="button" data-act="cancel">Cancelar</button></div>
+      </form>` : `
+      <form id="personForm" novalidate>
+        <div class="row">
+          <div class="field"><label for="f-given">Nome</label><input type="text" id="f-given" value="${esc(p.given)}" placeholder="Ex.: Maria Helena" autocomplete="off"></div>
+          <div class="field"><label for="f-surname">Sobrenome</label><input type="text" id="f-surname" value="${esc(p.surname)}" placeholder="Ex.: Souza Lima" autocomplete="off"></div>
+        </div>
+        <div class="field"><span class="lbl" id="sexLbl">Sexo</span>
+          <div class="seg" role="radiogroup" aria-labelledby="sexLbl">
+            <input type="radio" name="sex" id="sx-F" value="F" ${p.sex === "F" ? "checked" : ""}><label for="sx-F">Feminino</label>
+            <input type="radio" name="sex" id="sx-M" value="M" ${p.sex === "M" ? "checked" : ""}><label for="sx-M">Masculino</label>
+            <input type="radio" name="sex" id="sx-U" value="U" ${!p.sex || p.sex === "U" ? "checked" : ""}><label for="sx-U">Não sei</label>
+          </div>
+        </div>
+        ${famSelect}
+        <fieldset><legend>* Nascimento</legend>
+          <div class="row">
+            <div class="field"><label for="f-bd">Data</label><input type="text" id="f-bd" value="${esc(p.birthDate)}" placeholder="12/03/1931" autocomplete="off"></div>
+            <div class="field"><label for="f-bp">Local</label><input type="text" id="f-bp" value="${esc(p.birthPlace)}" placeholder="Cidade, estado, país" autocomplete="off"></div>
+          </div>
+          <span class="help">Pode ser só o ano, ou “c. 1890”, “antes de 1900”.</span>
+        </fieldset>
+        <label class="check"><input type="checkbox" id="f-living" ${p.living ? "checked" : ""}> Está vivo(a)</label>
+        <fieldset id="deathBox" ${p.living ? "hidden" : ""}><legend>† Falecimento</legend>
+          <div class="row">
+            <div class="field"><label for="f-dd">Data</label><input type="text" id="f-dd" value="${esc(p.deathDate)}" placeholder="1998" autocomplete="off"></div>
+            <div class="field"><label for="f-dp">Local</label><input type="text" id="f-dp" value="${esc(p.deathPlace)}" placeholder="Cidade" autocomplete="off"></div>
+          </div>
+        </fieldset>
+        <div class="field"><label for="f-occ">Ocupação</label><input type="text" id="f-occ" value="${esc(p.occupation)}" placeholder="Ex.: agricultor, costureira" autocomplete="off"></div>
+        <div class="field"><label for="f-notes">Notas e histórias</label><textarea id="f-notes" placeholder="Apelidos, de onde veio a família, histórias contadas pelos parentes…">${esc(p.notes)}</textarea></div>
+        <div class="field"><span class="lbl">Foto</span>
+          <div class="photo-row">${avatarHTML({ ...p, given: p.given || "?" })}
+            <div class="actions">
+              ${(Store.kind === "local" || Store.assets) ? `<label class="btn sm" for="f-photo">${p.photo ? "Trocar foto" : "Escolher foto"}</label><input type="file" id="f-photo" accept="image/*" hidden>` : `<span class="hint">Fotos indisponíveis aqui.</span>`}
+              ${p.photo ? `<button class="btn sm ghost" type="button" data-act="nophoto">Remover</button>` : ""}
+            </div>
+          </div>
+        </div>
+        ${isFirst ? `<label class="check"><input type="checkbox" id="f-me" checked> Esta pessoa sou eu</label>` : ""}
+        <p class="err" id="formErr" hidden></p>
+        <div class="actions"><button class="btn primary" type="submit" id="saveBtn">Salvar</button><button class="btn" type="button" data-act="cancel">Cancelar</button></div>
+      </form>`}
+  `;
+  const living = $("#f-living"); if (living) living.addEventListener("change", () => { $("#deathBox").hidden = living.checked; });
+  const g = $("#f-given"); if (g && !isPhone()) g.focus();
+}
+function formErr(msg) { const e = $("#formErr"); if (e) { e.textContent = msg; e.hidden = false; } else toast(msg); }
+
+async function submitPerson() {
+  const v = S.view;
+  const given = $("#f-given").value.trim(), surname = $("#f-surname").value.trim();
+  if (!given && !surname) return formErr("Escreva pelo menos o nome ou o sobrenome.");
+  const living = $("#f-living").checked;
+  const prev = v.id ? P(v.id) : {};
+  const data = {
+    ...prev,
+    given, surname,
+    sex: (document.querySelector("input[name=sex]:checked") || {}).value || "U",
+    living,
+    birthDate: $("#f-bd").value.trim(), birthPlace: $("#f-bp").value.trim(),
+    deathDate: living ? "" : $("#f-dd").value.trim(), deathPlace: living ? "" : $("#f-dp").value.trim(),
+    occupation: $("#f-occ").value.trim(), notes: $("#f-notes").value.trim(),
+    photo: v.photo !== undefined ? v.photo : (prev.photo || null),
+    updated: Date.now(),
+  };
+  if (!v.id) data.created = Date.now();
+  const id = v.id || uid("p");
+  const famChoice = $("#f-fam") ? $("#f-fam").value : null;
+  $("#saveBtn").disabled = true;
+  try {
+    await putPerson(id, data);
+    S.people.set(id, data); // optimistic, so relation helpers see the new person
+    if (!v.id && v.rel) await linkRelation(v.rel, v.of, id, famChoice);
+    if ($("#f-me") && $("#f-me").checked) await putSettings({ ...S.settings, rootId: id });
+    if (v.id && prev.photo && prev.photo !== data.photo && !prev.photo.startsWith("data:") && Store.assets) Store.assets.delete(prev.photo).catch(() => {});
+    S.view = { mode: "person" }; S.selected = id;
+    renderAll(); centerOn(id);
+    toast(v.id ? "Dados salvos" : `${fullName(data)} adicionado(a) à árvore`);
+  } catch (e) {
+    $("#saveBtn").disabled = false;
+    formErr(dbMsg(e));
+  }
+}
+async function linkRelation(rel, of, other, famChoice) {
+  if (rel === "parent") await addParent(of, other);
+  if (rel === "partner") await addPartner(of, other);
+  if (rel === "child") await addChild(of, other, famChoice || null);
+  if (rel === "sibling") await addSibling(of, other);
+}
+function dbMsg(e) {
+  if (!e) return "Algo deu errado. Tente de novo.";
+  if (e instanceof Error) return e.message;
+  if (e.code === "quota_exceeded") return "O espaço de armazenamento da árvore está cheio.";
+  if (e.code === "invalid_argument") return "Você não tem permissão para editar esta árvore.";
+  return "Não consegui salvar agora. Verifique a conexão e tente de novo.";
+}
+
+/* ---- photo ---- */
+function shrinkImage(file, max) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob((b) => b ? resolve({ blob: b, dataUrl: c.toDataURL("image/jpeg", 0.82) }) : reject(new Error("Não consegui ler a imagem.")), "image/jpeg", 0.85);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Esse arquivo não parece ser uma imagem.")); };
+    img.src = url;
+  });
+}
+async function onPhoto(file) {
+  if (!file) return;
+  const keep = readForm();
+  try {
+    if (Store.kind === "db") {
+      if (!Store.assets) throw new Error("Fotos indisponíveis aqui.");
+      toast("Enviando foto…");
+      const { blob } = await shrinkImage(file, 640);
+      const res = await Store.assets.upload(blob, { type: "image/jpeg" });
+      S.view.photo = res.id;
+    } else {
+      const { dataUrl } = await shrinkImage(file, 240);
+      S.view.photo = dataUrl;
+    }
+    renderPanel(); writeForm(keep); toast("Foto pronta. Clique em Salvar para guardar.");
+  } catch (e) { formErr(e.message || "Não consegui enviar a foto."); }
+}
+const FORM_IDS = ["f-given", "f-surname", "f-bd", "f-bp", "f-dd", "f-dp", "f-occ", "f-notes"];
+function readForm() {
+  const o = {}; FORM_IDS.forEach((i) => { const e = document.getElementById(i); if (e) o[i] = e.value; });
+  o.sex = (document.querySelector("input[name=sex]:checked") || {}).value; o.living = $("#f-living")?.checked; o.fam = $("#f-fam")?.value; o.me = $("#f-me")?.checked;
+  return o;
+}
+function writeForm(o) {
+  FORM_IDS.forEach((i) => { const e = document.getElementById(i); if (e && o[i] !== undefined) e.value = o[i]; });
+  if (o.sex) { const r = document.getElementById("sx-" + o.sex); if (r) r.checked = true; }
+  if ($("#f-living")) { $("#f-living").checked = !!o.living; $("#deathBox").hidden = !!o.living; }
+  if ($("#f-fam") && o.fam !== undefined) $("#f-fam").value = o.fam;
+  if ($("#f-me") && o.me !== undefined) $("#f-me").checked = o.me;
+}
+
+/* ---- family (union) form ---- */
+function renderFamilyForm(el) {
+  const f = S.families.get(S.view.fid);
+  if (!f) { S.view = { mode: "person" }; return renderPanel(); }
+  const names = f.partners.map((x) => fullName(P(x))).join(" e ");
+  el.innerHTML = `
+    <h2 style="margin:0;font-family:var(--font-display);font-size:20px;text-wrap:balance">⚭ União de ${esc(names)}</h2>
+    <form id="famForm" novalidate>
+      <div class="row">
+        <div class="field"><label for="m-date">Data do casamento</label><input type="text" id="m-date" value="${esc(f.marriageDate || "")}" placeholder="20/05/1955" autocomplete="off"></div>
+        <div class="field"><label for="m-place">Local</label><input type="text" id="m-place" value="${esc(f.marriagePlace || "")}" placeholder="Igreja, cidade" autocomplete="off"></div>
+      </div>
+      <p class="err" id="formErr" hidden></p>
+      <div class="actions"><button class="btn primary" type="submit">Salvar</button><button class="btn" type="button" data-act="cancel">Cancelar</button></div>
+    </form>`;
+}
+
+/* ================= export / import ================= */
+function exportData() {
+  return {
+    app: "raizes-da-familia", version: 1, exportedAt: new Date().toISOString(),
+    settings: S.settings,
+    people: Object.fromEntries(S.people), families: Object.fromEntries(S.families),
+  };
+}
+async function offerFile(filename, text, label, okMsg) {
+  if (Store.downloads) {
+    try { await Store.downloads.save({ filename, data: text }); toast(okMsg || `${label} salvo`); return true; }
+    catch (e) { if (e && e.code === "declined") return false; }
+  }
+  S.view = { mode: "export", filename, text, label }; setSheet(true); renderPanel();
+  return false;
+}
+function renderExportBox(el) {
+  const v = S.view;
+  el.innerHTML = `
+    <h2 style="margin:0;font-family:var(--font-display);font-size:20px">${esc(v.label)}</h2>
+    <p class="hint">Não consegui baixar o arquivo direto daqui. Copie o conteúdo abaixo e cole num arquivo chamado <strong>${esc(v.filename)}</strong>.</p>
+    <div class="field"><textarea class="code" id="exportText" readonly>${esc(v.text)}</textarea></div>
+    <div class="actions"><button class="btn primary" type="button" data-act="copy">Copiar</button><button class="btn" type="button" data-act="cancel">Fechar</button></div>`;
+}
+function renderRestore(el) {
+  const v = S.view;
+  el.innerHTML = `
+    <h2 style="margin:0;font-family:var(--font-display);font-size:20px">Restaurar cópia</h2>
+    <p>O arquivo tem <strong>${v.np}</strong> pessoas e <strong>${v.nf}</strong> uniões. Elas serão juntadas à árvore atual; quem tiver o mesmo código interno será substituído pela versão do arquivo.</p>
+    <div class="actions"><button class="btn primary" type="button" data-act="restore-yes">Restaurar</button><button class="btn" type="button" data-act="cancel">Cancelar</button></div>`;
+}
+async function doRestore() {
+  const d = S.view.data;
+  toast("Restaurando…");
+  try {
+    for (const [id, p] of Object.entries(d.people || {})) await putPerson(id, p);
+    for (const [id, f] of Object.entries(d.families || {})) await putFamily(id, { partners: f.partners || [], children: f.children || [], marriageDate: f.marriageDate || "", marriagePlace: f.marriagePlace || "" });
+    if (d.settings && d.settings.rootId && !S.settings.rootId) await putSettings({ ...S.settings, rootId: d.settings.rootId });
+    S.view = { mode: "overview" }; S.fittedOnce = false; renderAll(); toast("Cópia restaurada");
+  } catch (e) { toast(dbMsg(e)); }
+}
+
+/* ---- Excalidraw ---- */
+function toExcalidraw() {
+  const L = S.layout || computeLayout();
+  if (!L) return null;
+  const els = [];
+  let seed = 1;
+  const base = (type, x, y, w, h, extra) => ({
+    id: uid("x"), type, x, y, width: w, height: h, angle: 0,
+    strokeColor: "#1e1e1e", backgroundColor: "transparent", fillStyle: "solid", strokeWidth: 1, strokeStyle: "solid",
+    roughness: 1, opacity: 100, groupIds: [], frameId: null, roundness: null,
+    seed: seed++, version: 1, versionNonce: seed * 7919, isDeleted: false, boundElements: null,
+    updated: Date.now(), link: null, locked: false, ...extra,
+  });
+  const fills = { M: "#d0ebff", F: "#ffdeeb", U: "#e9ecef" };
+  const line = (pts) => {
+    const x0 = pts[0][0], y0 = pts[0][1];
+    const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+    els.push(base("line", x0, y0, Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), {
+      points: pts.map(([x, y]) => [x - x0, y - y0]), lastCommittedPoint: null, startBinding: null, endBinding: null,
+      startArrowhead: null, endArrowhead: null, strokeColor: "#868e96",
+    }));
+  };
+  for (const u of L.unions) {
+    for (const p of u.partners) { const n = L.nodes.get(p); line([[n.x, n.y + H / 2], [n.x, u.y], [u.x, u.y]]); }
+    for (const c of u.children) { const n = L.nodes.get(c); const mid = u.y + (n.y - H / 2 - u.y) / 2; line([[u.x, u.y], [u.x, mid], [n.x, mid], [n.x, n.y - H / 2]]); }
+    els.push(base("ellipse", u.x - 5, u.y - 5, 10, 10, { backgroundColor: "#868e96", strokeColor: "#868e96" }));
+  }
+  for (const [id, pos] of L.nodes) {
+    const p = P(id);
+    const rect = base("rectangle", pos.x - W / 2, pos.y - H / 2, W, H, { backgroundColor: fills[sexOf(p)], roundness: { type: 3 } });
+    const txt = [fullName(p), lifespan(p)].filter(Boolean).join("\n");
+    const fs = 16, lines = txt.split("\n");
+    const tw = Math.min(W - 10, Math.max(...lines.map((l) => l.length)) * fs * 0.55), th = lines.length * fs * 1.25;
+    const t = base("text", pos.x - tw / 2, pos.y - th / 2, tw, th, {
+      text: txt, originalText: txt, fontSize: fs, fontFamily: 1, textAlign: "center", verticalAlign: "middle",
+      containerId: rect.id, lineHeight: 1.25, autoResize: true, baseline: fs,
+    });
+    rect.boundElements = [{ id: t.id, type: "text" }];
+    els.push(rect, t);
+  }
+  return { elements: els };
+}
+function excalidrawFile() {
+  const x = toExcalidraw();
+  if (!x) return null;
+  return JSON.stringify({ type: "excalidraw", version: 2, source: "https://excalidraw.com", elements: x.elements, appState: { viewBackgroundColor: "#ffffff", gridSize: null }, files: {} });
+}
+async function exportExcalidraw() {
+  const json = excalidrawFile();
+  if (!json) return toast("Adicione pessoas antes de exportar.");
+  await offerFile("arvore-familia.excalidraw.json", json, "Desenho para o Excalidraw", "Arquivo salvo. No excalidraw.com, use Menu › Abrir e escolha esse arquivo.");
+}
+async function copyExcalidraw() {
+  const json = excalidrawFile();
+  if (!json) return toast("Adicione pessoas antes de exportar.");
+  try { await navigator.clipboard.writeText(json); toast("Copiado. Abra excalidraw.com e aperte Ctrl+V (ou Colar)."); }
+  catch (e) { S.view = { mode: "export", filename: "arvore-familia.excalidraw.json", text: json, label: "Desenho para o Excalidraw" }; setSheet(true); renderPanel(); }
+}
+
+/* ================= search ================= */
+const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+let resIdx = 0;
+function runSearch() {
+  const q = norm($("#q").value.trim()), box = $("#results");
+  if (!q) { box.hidden = true; return; }
+  const hits = [...S.people.entries()].filter(([, p]) => norm(fullName(p) + " " + (p.birthPlace || "") + " " + (p.deathPlace || "")).includes(q)).slice(0, 12);
+  resIdx = 0;
+  box.innerHTML = hits.length ? hits.map(([id, p], i) => `<button type="button" data-go="${id}" class="${i === 0 ? "active" : ""}"><span>${esc(fullName(p))}</span><span class="yrs">${esc(lifespan(p))}</span></button>`).join("") : `<div class="none">Ninguém encontrado com “${esc($("#q").value.trim())}”.</div>`;
+  box.hidden = false;
+}
+$("#q").addEventListener("input", runSearch);
+$("#q").addEventListener("keydown", (e) => {
+  const btns = [...$("#results").querySelectorAll("button")];
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); if (!btns.length) return; resIdx = (resIdx + (e.key === "ArrowDown" ? 1 : -1) + btns.length) % btns.length; btns.forEach((b, i) => b.classList.toggle("active", i === resIdx)); }
+  if (e.key === "Enter" && btns[resIdx]) { e.preventDefault(); btns[resIdx].click(); }
+  if (e.key === "Escape") { $("#results").hidden = true; $("#q").blur(); }
+});
+document.addEventListener("click", (e) => { if (!e.target.closest(".search")) $("#results").hidden = true; if (!e.target.closest(".menu-wrap")) closeMenu(); });
+
+/* ================= menu ================= */
+function closeMenu() { $("#menu").hidden = true; $("#menuBtn").setAttribute("aria-expanded", "false"); }
+$("#menuBtn").addEventListener("click", () => { const m = $("#menu"); m.hidden = !m.hidden; $("#menuBtn").setAttribute("aria-expanded", String(!m.hidden)); });
+$("#menu").addEventListener("click", async (e) => {
+  const b = e.target.closest("button"); if (!b) return; closeMenu();
+  if (b.dataset.act === "excalidraw") exportExcalidraw();
+  if (b.dataset.act === "excalidraw-copy") copyExcalidraw();
+  if (b.dataset.act === "backup") offerFile(`arvore-familia-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(exportData(), null, 2), "Cópia de segurança");
+  if (b.dataset.act === "restore") $("#restoreFile").click();
+});
+$("#restoreFile").addEventListener("change", async (e) => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!d || typeof d.people !== "object") throw new Error();
+    S.view = { mode: "restore", data: d, np: Object.keys(d.people).length, nf: Object.keys(d.families || {}).length };
+    setSheet(true); renderPanel();
+  } catch (err) { toast("Esse arquivo não é uma cópia de segurança desta árvore."); }
+});
+
+/* ================= panel events ================= */
+$("#addBtn").addEventListener("click", () => { S.view = { mode: "edit" }; setSheet(true); renderPanel(); });
+$("#startBtn").addEventListener("click", () => { S.view = { mode: "edit" }; setSheet(true); renderPanel(); });
+
+document.addEventListener("click", async (e) => {
+  const go = e.target.closest("[data-go]");
+  if (go) { $("#results").hidden = true; $("#q").value = ""; select(go.dataset.go, { center: true }); return; }
+  const inPanel = e.target.closest("#panel"); if (!inPanel) return;
+  const t = e.target.closest("button"); if (!t) return;
+  const id = S.selected;
+  try {
+    if (t.dataset.add) { S.view = { mode: "edit", rel: t.dataset.add, of: id, tab: "new" }; renderPanel(); return; }
+    if (t.dataset.tab) { S.view.tab = t.dataset.tab; renderPanel(); return; }
+    if (t.dataset.fam) { S.view = { mode: "family", fid: t.dataset.fam }; renderPanel(); return; }
+    if (t.dataset.unlink) {
+      const o = t.dataset.other, k = t.dataset.unlink;
+      if (k === "parent") await unlinkParent(id, o);
+      if (k === "child") await unlinkChild(id, o);
+      if (k === "partner") await unlinkPartner(id, o);
+      if (k === "sibling") await unlinkSibling(id, o);
+      toast("Ligação removida");
+      return;
+    }
+    switch (t.dataset.act) {
+      case "edit": S.view = { mode: "edit", id }; renderPanel(); break;
+      case "me": await putSettings({ ...S.settings, rootId: id }); toast("Pronto. Agora cada pessoa mostra o parentesco com você."); break;
+      case "del": S.view = { mode: "person", confirmDelete: true }; renderPanel(); break;
+      case "del-no": S.view = { mode: "person" }; renderPanel(); break;
+      case "del-yes": { const name = fullName(P(id)); await deletePerson(id); select(null); toast(`${name} foi excluído(a)`); break; }
+      case "cancel": S.view = S.selected ? { mode: "person" } : { mode: "overview" }; if (!S.selected) setSheet(false); renderPanel(); break;
+      case "nophoto": { const keep = readForm(); S.view.photo = null; renderPanel(); writeForm(keep); break; }
+      case "copy": {
+        const ta = $("#exportText");
+        try { await navigator.clipboard.writeText(ta.value); toast("Copiado"); } catch (err) { ta.focus(); ta.select(); toast("Selecionei o texto. Use Ctrl+C para copiar."); }
+        break;
+      }
+      case "restore-yes": await doRestore(); break;
+    }
+  } catch (err) { toast(dbMsg(err)); }
+});
+document.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (e.target.id === "personForm") return submitPerson();
+  if (e.target.id === "linkForm") {
+    const v = S.view, other = $("#f-existing").value, fam = $("#f-fam") ? $("#f-fam").value : null;
+    try { await linkRelation(v.rel, v.of, other, fam); S.view = { mode: "person" }; renderAll(); toast("Ligação criada"); }
+    catch (err) { formErr(dbMsg(err)); }
+  }
+  if (e.target.id === "famForm") {
+    const f = S.families.get(S.view.fid);
+    try { await putFamily(S.view.fid, { ...f, marriageDate: $("#m-date").value.trim(), marriagePlace: $("#m-place").value.trim() }); S.view = { mode: "person" }; renderAll(); toast("União salva"); }
+    catch (err) { formErr(dbMsg(err)); }
+  }
+});
+document.addEventListener("change", (e) => { if (e.target.id === "f-photo") onPhoto(e.target.files[0]); });
+
+/* ================= misc ================= */
+let toastTimer;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 3200); }
+let noticeTimer;
+function showNotice(msg, ms) { const n = $("#notice"); n.textContent = msg; n.hidden = false; clearTimeout(noticeTimer); if (ms) noticeTimer = setTimeout(() => (n.hidden = true), ms); else noticeTimer = setTimeout(() => (n.hidden = true), 9000); }
+
+function renderAll() {
+  $("#loading").hidden = S.loaded;
+  const has = S.people.size > 0;
+  $("#empty").hidden = !S.loaded || has;
+  $("#zoomCtl").hidden = !has; $("#legend").hidden = !has;
+  $("#count").textContent = has ? `${S.people.size} ${S.people.size === 1 ? "pessoa" : "pessoas"}` : "";
+  document.querySelectorAll(".edit-only").forEach((b) => (b.hidden = !S.canWrite));
+  if (S.selected && !S.people.has(S.selected)) { S.selected = null; S.view = { mode: "overview" }; }
+  if (typeof dagre === "undefined" && has) showNotice("Não consegui carregar o desenho da árvore. Recarregue a página.", 0);
+  renderTree();
+  if (!["edit", "family", "restore", "export"].includes(S.view.mode)) renderPanel();
+}
+
+renderPanel();
+boot();
+})();
+</script>
