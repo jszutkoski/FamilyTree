@@ -22,6 +22,10 @@
   --danger-soft: #f6e1dd;
   --edge: #8f9c95;
   --shadow: 0 1px 2px rgba(29, 42, 47, .08), 0 4px 14px rgba(29, 42, 47, .06);
+  --lb-bg: rgba(12, 16, 14, .94);
+  --lb-ink: #e9eee9;
+  --photo-cap: #ffffff;
+  --photo-shade: rgba(0, 0, 0, .66);
   --font-display: "Literata", Georgia, "Times New Roman", serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -198,6 +202,85 @@ legend { font-size: 12px; font-weight: 600; color: var(--muted); padding: 0 4px;
 .err { color: var(--danger); font-size: 13px; margin: 0; }
 textarea.code { font-family: var(--font-data); font-size: 11px; min-height: 140px; }
 
+/* ---------- phase 2: tabs, timeline, memories, sources, viewer ---------- */
+.form-title { margin: 0; font-family: var(--font-display); font-size: 20px; line-height: 1.25; text-wrap: balance; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ptabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.ptabs::-webkit-scrollbar { display: none; }
+.ptabs button { flex: 1 0 auto; border: 0; background: none; padding: 9px 4px 10px; font-weight: 500; font-size: 13.5px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.ptabs button:hover { color: var(--ink); }
+.ptabs button.on { color: var(--ink); border-bottom-color: var(--accent); }
+.ptabs i { font-style: normal; font-family: var(--font-data); font-size: 11px; background: var(--surface-2); border-radius: 99px; padding: 1px 6px; margin-left: 2px; }
+.tl-title .mini { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 2px 6px; border-radius: 6px; }
+.tl-title .mini:hover { background: var(--surface-2); color: var(--ink); }
+.cite { font-family: var(--font-data); font-size: 10px; font-weight: 500; color: var(--accent); margin-left: 3px; }
+.sym.fs { font-size: 10px; font-weight: 600; letter-spacing: .02em; }
+.facts a, .src a, .lb-info a:not(.btn) { color: var(--accent); text-underline-offset: 3px; }
+.stat b small { font-size: 13px; color: var(--muted); font-weight: 400; }
+.linkish { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.linkish:hover { text-decoration-color: var(--accent); }
+.nm-line { display: block; }
+.gap-line { display: block; color: var(--muted); font-size: 12px; }
+.olist { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.people-links { font-size: 13px; }
+
+.tl { list-style: none; margin: 0; padding: 0; display: grid; }
+.tl-item { display: grid; grid-template-columns: 74px 20px minmax(0, 1fr); column-gap: 10px; position: relative; padding-bottom: 16px; }
+.tl-item::before { content: ""; position: absolute; left: calc(74px + 10px + 9.5px); top: 20px; bottom: 0; width: 1px; background: var(--line); }
+.tl-item:last-child::before { display: none; }
+.tl-date { text-align: right; font-family: var(--font-data); padding-top: 1px; }
+.tl-date b { display: block; font-weight: 500; font-size: 13px; font-variant-numeric: tabular-nums; }
+.tl-date span { display: block; font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-dot { width: 20px; height: 20px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-family: var(--font-data); font-size: 11px; position: relative; z-index: 1; }
+.tl-item.family .tl-dot { background: var(--surface-2); color: var(--ink); }
+.tl-item.context .tl-dot { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--muted); }
+.tl-item.context .tl-title { color: var(--muted); font-weight: 400; }
+.tl-body { min-width: 0; }
+.tl-title { font-weight: 500; }
+.tl-place { font-size: 13px; color: var(--muted); }
+.tl-detail { font-size: 13px; white-space: pre-wrap; margin-top: 2px; }
+.age { font-family: var(--font-data); font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.gallery.sm { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.thumb { position: relative; aspect-ratio: 1; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; padding: 0; background: var(--surface-2); cursor: pointer; display: block; width: 100%; max-width: 100%; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 6px 4px; font-size: 11px; color: var(--photo-cap); background: linear-gradient(transparent, var(--photo-shade)); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gallery.sm .thumb .cap { display: none; }
+.thumb.pdf .cap { color: var(--ink); background: none; }
+.thumb .badge { position: absolute; top: 5px; left: 5px; font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; background: var(--surface); color: var(--ink); border-radius: 4px; padding: 1px 5px; }
+.pdf-ico { position: absolute; inset: 0 0 18px; display: grid; place-items: center; font-family: var(--font-data); font-weight: 500; color: var(--danger); font-size: 15px; letter-spacing: .06em; }
+.gallery.sm .pdf-ico { inset: 0; font-size: 12px; }
+.pdf-ico.big { position: static; font-size: 28px; width: 120px; height: 150px; border-radius: 8px; background: var(--surface); color: var(--danger); }
+
+.srcs { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.src { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
+.src .n { font-family: var(--font-data); color: var(--accent); font-weight: 500; }
+.src-body { display: grid; gap: 5px; min-width: 0; }
+.src-title { font-weight: 600; }
+.src-meta, .src-facts { font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+details summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+details .notes { margin-top: 6px; }
+.cite-existing { display: flex; gap: 6px; align-items: center; }
+.cite-existing select { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+.checks { display: grid; gap: 6px; }
+
+.lb { position: fixed; inset: 0; z-index: 40; background: var(--lb-bg); display: grid; grid-template-columns: minmax(0, 1fr) 380px; }
+.lb-media { display: grid; place-items: center; padding: calc(60px + env(safe-area-inset-top, 0px)) 16px 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); min-width: 0; min-height: 0; overflow: hidden; }
+.lb-media img { max-width: 100%; max-height: calc(100vh - 100px); object-fit: contain; border-radius: 4px; box-shadow: 0 10px 40px rgba(0, 0, 0, .45); }
+.lb-pdf { display: grid; gap: 16px; justify-items: center; }
+.lb-top { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); display: flex; gap: 6px; align-items: center; }
+.lb-top span { color: var(--lb-ink); font-family: var(--font-data); font-size: 12px; margin-left: 4px; }
+.lb-info { background: var(--surface); overflow-y: auto; padding: 22px 20px calc(24px + env(safe-area-inset-bottom, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); display: grid; gap: 16px; align-content: start; min-width: 0; }
+.lb-meta { margin: 4px 0 0; font-family: var(--font-data); font-size: 12.5px; color: var(--muted); }
+@media (max-width: 760px) {
+  .lb { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 44%) minmax(0, 1fr); }
+  .lb-media { padding-top: calc(56px + env(safe-area-inset-top, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .lb-media img { max-height: 100%; }
+  .lb-info { border-radius: 14px 14px 0 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .pdf-ico.big { width: 90px; height: 110px; }
+}
+
 #toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: 13.5px; box-shadow: var(--shadow); z-index: 50; max-width: calc(100% - 32px); }
 
 @media (max-width: 760px) {
@@ -245,7 +328,7 @@ textarea.code { font-family: var(--font-data); font-size: 11px; min-height: 140p
         <button type="button" data-act="excalidraw-copy">Copiar para o Excalidraw<small>Depois é só colar (Ctrl+V) em excalidraw.com para enfeitar e imprimir</small></button>
         <button type="button" data-act="excalidraw">Baixar arquivo do Excalidraw<small>Para abrir pelo menu Abrir do Excalidraw</small></button>
         <hr>
-        <button type="button" data-act="backup">Baixar cópia de segurança<small>Arquivo .json com todas as pessoas</small></button>
+        <button type="button" data-act="backup">Baixar cópia de segurança<small>Arquivo .json com pessoas, fontes e legendas. Fotos e documentos continuam guardados na página.</small></button>
         <button type="button" data-act="restore" class="edit-only">Restaurar cópia de segurança<small>Junta um arquivo .json com a árvore atual</small></button>
       </div>
     </div>
@@ -297,6 +380,18 @@ textarea.code { font-family: var(--font-data); font-size: 11px; min-height: 140p
     <div class="panel-inner" id="panelInner"></div>
   </aside>
 </div>
+<input type="file" id="mediaFile" accept="image/*,application/pdf" multiple hidden>
+<input type="file" id="srcFile" accept="image/*,application/pdf" multiple hidden>
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Memória">
+  <div class="lb-media" id="lbMedia"></div>
+  <div class="lb-top">
+    <button class="btn sm lb-close" type="button" data-lb="close">✕ Fechar</button>
+    <button class="btn sm" type="button" data-lb="prev" id="lbPrev" aria-label="Anterior">‹</button>
+    <button class="btn sm" type="button" data-lb="next" id="lbNext" aria-label="Próxima">›</button>
+    <span id="lbCount"></span>
+  </div>
+  <div class="lb-info" id="lbInfo"></div>
+</div>
 <div id="toast" role="status" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
@@ -308,6 +403,11 @@ textarea.code { font-family: var(--font-data); font-size: 11px; min-height: 140p
 const S = {
   people: new Map(),     // id -> person
   families: new Map(),   // id -> { partners:[], children:[], marriageDate, marriagePlace }
+  media: new Map(),      // id -> { kind, title, date, place, note, people:[], asset, thumb, mime, sourceId }
+  sources: new Map(),    // id -> { type, title, date, repository, reference, url, transcription, people:[], facts:[] }
+  personTab: "resumo",
+  overviewTab: "pessoas",
+  lb: null,
   settings: { rootId: null },
   selected: null,
   view: { mode: "overview" }, // overview | person | edit | family | confirmDelete | export
@@ -327,28 +427,32 @@ const isPhone = () => window.matchMedia("(max-width: 760px)").matches;
 const LS_KEY = "raizes-da-familia-v1";
 const Store = {
   kind: null, db: null, assets: null, downloads: null,
-  local: { people: {}, families: {}, meta: {} },
+  local: { people: {}, families: {}, media: {}, sources: {}, meta: {} },
   async put(col, id, data) {
-    if (this.kind === "db") return this.db.doc(col + "/" + id).set(data);
+    if (this.kind === "db") { S[col].set(id, data); return this.db.doc(col + "/" + id).set(data); }
     this.local[col][id] = data; this.saveLocal(); applyLocal();
   },
   async del(col, id) {
-    if (this.kind === "db") return this.db.doc(col + "/" + id).delete();
+    if (this.kind === "db") { S[col].delete(id); return this.db.doc(col + "/" + id).delete(); }
     delete this.local[col][id]; this.saveLocal(); applyLocal();
   },
-  saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(this.local)); } catch (e) { /* private window */ } },
+  saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(this.local)); } catch (e) { toast("O navegador não tem mais espaço para guardar. Use a página publicada."); } },
   loadLocal() {
-    try { const raw = localStorage.getItem(LS_KEY); if (raw) this.local = Object.assign({ people: {}, families: {}, meta: {} }, JSON.parse(raw)); } catch (e) { /* ignore */ }
+    try { const raw = localStorage.getItem(LS_KEY); if (raw) this.local = Object.assign({ people: {}, families: {}, media: {}, sources: {}, meta: {} }, JSON.parse(raw)); } catch (e) { /* ignore */ }
   },
 };
 function applyLocal() {
   S.people = new Map(Object.entries(Store.local.people));
   S.families = new Map(Object.entries(Store.local.families));
+  S.media = new Map(Object.entries(Store.local.media || {}));
+  S.sources = new Map(Object.entries(Store.local.sources || {}));
   S.settings = Object.assign({ rootId: null }, Store.local.meta.settings || {});
   S.loaded = true; renderAll();
 }
 const putPerson = (id, p) => Store.put("people", id, p);
 const putFamily = (id, f) => Store.put("families", id, f);
+const putMedia = (id, m) => Store.put("media", id, m);
+const putSource = (id, x) => Store.put("sources", id, x);
 const putSettings = (s) => Store.kind === "db" ? Store.db.doc("meta/settings").set(s) : (Store.local.meta.settings = s, Store.saveLocal(), applyLocal());
 
 async function boot() {
@@ -369,11 +473,11 @@ async function boot() {
     try { const ok = await u.canEdit(); S.canWrite = !!ok; document.body.classList.toggle("readonly", !ok); renderAll(); } catch (e) { /* keep */ }
   }).catch(() => {});
 
-  const got = { people: false, families: false, meta: false };
+  const got = { people: false, families: false, media: false, sources: false, meta: false };
   const timer = setTimeout(() => {
     if (!S.loaded) { $("#loading").textContent = "Não consegui carregar os dados ainda. Verifique a conexão; a página tenta de novo sozinha."; }
   }, 10000);
-  const ready = () => { if (got.people && got.families && got.meta) { clearTimeout(timer); S.loaded = true; renderAll(); } };
+  const ready = () => { if (Object.values(got).every(Boolean)) { clearTimeout(timer); S.loaded = true; renderAll(); } };
   const onErr = (e) => { clearTimeout(timer); showNotice("Os dados pararam de sincronizar (" + (e && e.code || "erro") + "). Recarregue a página.", 0); };
   db.collection("people").onSnapshot((snap) => {
     const m = new Map(); snap.docs.forEach((d) => m.set(d.id, structuredClone(d.data())));
@@ -383,6 +487,12 @@ async function boot() {
     const m = new Map(); snap.docs.forEach((d) => m.set(d.id, structuredClone(d.data())));
     S.families = m; got.families = true; S.loaded ? renderAll() : ready();
   }, onErr);
+  for (const col of ["media", "sources"]) {
+    db.collection(col).onSnapshot((snap) => {
+      const m = new Map(); snap.docs.forEach((d) => m.set(d.id, structuredClone(d.data())));
+      S[col] = m; got[col] = true; S.loaded ? renderAll() : ready();
+    }, onErr);
+  }
   db.doc("meta/settings").onSnapshot((d) => {
     S.settings = Object.assign({ rootId: null }, d.exists ? d.data() : {}); got.meta = true; S.loaded ? renderAll() : ready();
   }, onErr);
@@ -411,6 +521,85 @@ const partnersOf = (id) => [...new Set(famsAsPartner(id).flatMap(([, f]) => f.pa
 const siblingsOf = (id) => [...new Set(famsAsChild(id).flatMap(([, f]) => f.children || []))].filter((x) => x !== id && S.people.has(x));
 const byBirth = (a, b) => (yearOf(P(a)?.birthDate) ?? 9999) - (yearOf(P(b)?.birthDate) ?? 9999);
 const photoSrc = (p) => !p.photo ? null : (p.photo.startsWith("data:") ? p.photo : "/_blob/" + p.photo);
+/* ---- dates ---- */
+function dateKey(s) {
+  s = String(s || "").trim(); if (!s) return null;
+  let m = s.match(/(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})/);
+  if (m) return +m[3] * 10000 + +m[2] * 100 + +m[1];
+  m = s.match(/(\d{1,2})[\/.\-](\d{4})/);
+  if (m) return +m[2] * 10000 + +m[1] * 100;
+  m = s.match(/(\d{4})/);
+  if (!m) return null;
+  let k = +m[1] * 10000;
+  if (/antes|before/i.test(s)) k -= 1; else if (/depois|após|apos|after/i.test(s)) k += 1300;
+  return k;
+}
+const isApprox = (s) => /c\.|cerca|aprox|antes|depois|após|~|\?/i.test(String(s || ""));
+function ageAt(p, dateStr) {
+  const b = dateKey(p.birthDate), e = dateKey(dateStr);
+  if (b == null || e == null || e < b) return null;
+  const bmd = b % 10000, emd = e % 10000;
+  let age = Math.floor(e / 10000) - Math.floor(b / 10000);
+  const precise = bmd >= 100 && emd >= 100 && bmd < 1300 && emd < 1300;
+  if (precise && emd < bmd) age--;
+  return { age: Math.max(0, age), approx: !precise || isApprox(p.birthDate) || isApprox(dateStr) };
+}
+function ageLabel(a) {
+  if (!a) return "";
+  if (a.age === 0) return a.approx ? "no primeiro ano de vida (aprox.)" : "com menos de 1 ano";
+  return `${a.approx ? "por volta dos" : "aos"} ${a.age} ${a.age === 1 ? "ano" : "anos"}`;
+}
+
+/* ---- memories, sources, events ---- */
+const EVENT_TYPES = {
+  baptism: "Batismo", firstCommunion: "Primeira comunhão", confirmation: "Crisma", education: "Formatura",
+  residence: "Mudança de residência", emigration: "Emigração", immigration: "Imigração", naturalization: "Naturalização",
+  military: "Serviço militar", work: "Trabalho", retirement: "Aposentadoria", burial: "Sepultamento", other: "Outro evento",
+};
+const SOURCE_TYPES = {
+  birthCert: "Certidão de nascimento", marriageCert: "Certidão de casamento", deathCert: "Certidão de óbito",
+  baptism: "Registro de batismo", parish: "Outro registro paroquial", immigration: "Registro de imigração",
+  census: "Censo ou recenseamento", idDoc: "Documento pessoal", familysearch: "Registro no FamilySearch",
+  newspaper: "Jornal ou publicação", oral: "Relato de família", photo: "Fotografia", other: "Outra fonte",
+};
+const evTitle = (ev) => ev.title || EVENT_TYPES[ev.type] || "Evento";
+const assetUrl = (a) => !a ? null : (a.startsWith("data:") ? a : "/_blob/" + a);
+const isPdfMedia = (m) => m.mime === "application/pdf";
+const byDateThenCreated = (a, b) => (dateKey(a[1].date) ?? 99999999) - (dateKey(b[1].date) ?? 99999999) || (a[1].created || 0) - (b[1].created || 0);
+const mediaOf = (pid) => [...S.media.entries()].filter(([, m]) => (m.people || []).includes(pid)).sort(byDateThenCreated);
+const sourcesOf = (pid) => [...S.sources.entries()].filter(([, s]) => (s.people || []).includes(pid)).sort((a, b) => (a[1].created || 0) - (b[1].created || 0));
+const sourceTitle = (s) => s.title || SOURCE_TYPES[s.type] || "Fonte";
+function citeNums(pid, key) {
+  const out = [];
+  sourcesOf(pid).forEach(([, s], i) => { if ((s.facts || []).includes(key)) out.push(i + 1); });
+  return out;
+}
+function cite(pid, key) {
+  const n = citeNums(pid, key);
+  return n.length ? `<sup class="cite" title="Fonte ${n.join(", ")}">${n.join(",")}</sup>` : "";
+}
+function factCatalog(pid) {
+  const p = P(pid), out = [];
+  out.push({ key: pid + ":birth", label: "Nascimento" });
+  out.push({ key: pid + ":parents", label: "Filiação (quem são os pais)" });
+  if (!p.living) out.push({ key: pid + ":death", label: "Falecimento" });
+  for (const ev of p.events || []) out.push({ key: pid + ":ev:" + ev.id, label: evTitle(ev) + (ev.date ? ` (${ev.date})` : "") });
+  for (const [fid, f] of famsAsPartner(pid)) {
+    const o = f.partners.find((x) => x !== pid);
+    if (o && S.people.has(o)) out.push({ key: "fam:" + fid + ":marriage", label: "União com " + fullName(P(o)) });
+  }
+  return out;
+}
+function assetInUse(a, ex = {}) {
+  if (!a) return false;
+  for (const [pid, p] of S.people) if (pid !== ex.person && p.photo === a) return true;
+  for (const [mid, m] of S.media) if (mid !== ex.media && (m.asset === a || m.thumb === a)) return true;
+  return false;
+}
+function dropAsset(a, ex) { if (a && !a.startsWith("data:") && Store.assets && !assetInUse(a, ex)) Store.assets.delete(a).catch(() => {}); }
+const safeUrl = (u) => /^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "";
+const FS_RE = /^[A-Z0-9]{4}-[A-Z0-9]{3,4}$/;
+
 
 /* ---- kinship relative to "me" (Portuguese terms) ---- */
 function ancestorsWithGen(id) {
@@ -566,10 +755,20 @@ async function deletePerson(id) {
       if (keep) await putFamily(fid, nf); else await Store.del("families", fid);
     }
   }
+  for (const [mid, m] of [...S.media.entries()]) if ((m.people || []).includes(id)) {
+    const people = m.people.filter((x) => x !== id);
+    if (people.length) await putMedia(mid, { ...m, people });
+    else { await Store.del("media", mid); dropAsset(m.asset, { media: mid, person: id }); dropAsset(m.thumb, { media: mid, person: id }); }
+  }
+  for (const [sid, s] of [...S.sources.entries()]) if ((s.people || []).includes(id)) {
+    const people = s.people.filter((x) => x !== id);
+    const facts = (s.facts || []).filter((k) => !k.startsWith(id + ":"));
+    if (people.length) await putSource(sid, { ...s, people, facts }); else await Store.del("sources", sid);
+  }
   const p = P(id);
   await Store.del("people", id);
   if (S.settings.rootId === id) await putSettings({ ...S.settings, rootId: null });
-  if (p && p.photo && !p.photo.startsWith("data:") && Store.assets) Store.assets.delete(p.photo).catch(() => {});
+  if (p && p.photo) dropAsset(p.photo, { person: id });
 }
 
 /* ================= layout ================= */
@@ -780,24 +979,71 @@ function renderPanel() {
   if (!S.loaded) { el.innerHTML = `<p class="hint">Carregando…</p>`; return; }
   if (v.mode === "edit") return renderForm(el);
   if (v.mode === "family") return renderFamilyForm(el);
+  if (v.mode === "event") return renderEventForm(el);
+  if (v.mode === "source") return renderSourceForm(el);
   if (v.mode === "export") return renderExportBox(el);
   if (v.mode === "restore") return renderRestore(el);
   if (S.selected && S.people.has(S.selected)) return renderPerson(el);
   renderOverview(el);
 }
 
+/* ---- overview ---- */
+function researchItems() {
+  const root = S.settings.rootId && S.people.has(S.settings.rootId) ? S.settings.rootId : null;
+  const anc = root ? ancestorsWithGen(root) : new Map();
+  const rows = [];
+  for (const [id, p] of S.people) {
+    const gaps = [];
+    if (!p.birthDate) gaps.push("data de nascimento");
+    else if (!citeNums(id, id + ":birth").length) gaps.push("fonte do nascimento");
+    if (!p.living && !p.deathDate) gaps.push("data de falecimento");
+    if (!parentsOf(id).length) gaps.push("pais");
+    if (gaps.length) rows.push({ id, gaps, rank: anc.has(id) ? anc.get(id) : 100 });
+  }
+  rows.sort((a, b) => a.rank - b.rank || fullName(P(a.id)).localeCompare(fullName(P(b.id)), "pt-BR"));
+  return rows;
+}
+function factStats() {
+  const cited = new Set([...S.sources.values()].flatMap((s) => s.facts || []));
+  let total = 0, ok = 0;
+  const count = (k) => { total++; if (cited.has(k)) ok++; };
+  for (const [id, p] of S.people) {
+    if (p.birthDate || p.birthPlace) count(id + ":birth");
+    if (p.deathDate || p.deathPlace) count(id + ":death");
+    (p.events || []).forEach((ev) => count(id + ":ev:" + ev.id));
+  }
+  for (const [fid, f] of S.families) if (f.marriageDate || f.marriagePlace) count("fam:" + fid + ":marriage");
+  return { total, ok };
+}
 function renderOverview(el) {
   const ids = [...S.people.keys()];
   const surnames = new Set(ids.map((i) => (P(i).surname || "").trim().split(/\s+/).pop()).filter(Boolean));
   const L = S.layout;
-  let gens = 0;
-  if (L) { const ys = new Set([...L.nodes.values()].map((n) => Math.round(n.y))); gens = ys.size; }
-  const groups = new Map();
-  ids.sort((a, b) => fullName(P(a)).localeCompare(fullName(P(b)), "pt-BR")).forEach((id) => {
-    const k = (P(id).given || "?")[0].toUpperCase();
-    if (!groups.has(k)) groups.set(k, []); groups.get(k).push(id);
-  });
+  const gens = L ? new Set([...L.nodes.values()].map((n) => Math.round(n.y))).size : 0;
+  const fs = factStats();
+  const research = researchItems();
   const root = S.settings.rootId && P(S.settings.rootId);
+  const tab = S.overviewTab;
+  const tabs = [["pessoas", "Pessoas", ids.length], ["fontes", "Fontes", S.sources.size], ["pesquisar", "A pesquisar", research.length]];
+  let body = "";
+  if (tab === "fontes") {
+    const list = [...S.sources.entries()].sort((a, b) => sourceTitle(a[1]).localeCompare(sourceTitle(b[1]), "pt-BR"));
+    body = list.length ? `<ul class="olist">${list.map(([, s]) => `<li><div class="src-title">${esc(sourceTitle(s))}</div>
+      <div class="src-meta">${[s.title ? SOURCE_TYPES[s.type] : "", s.date, s.repository].filter(Boolean).map(esc).join(" · ")}</div>
+      <div class="people-links">${(s.people || []).filter((x) => S.people.has(x)).map((x) => `<button class="linkish" type="button" data-go="${x}">${esc(fullName(P(x)))}</button>`).join(", ")}</div></li>`).join("")}</ul>`
+      : `<p class="hint">Nenhuma fonte ainda. Abra uma pessoa, vá na aba Fontes e cadastre a certidão ou o registro que comprova os dados dela.</p>`;
+  } else if (tab === "pesquisar") {
+    body = research.length ? `<p class="hint">O que falta descobrir, começando pelos seus antepassados diretos.</p><div class="list">${research.slice(0, 40).map((r) => `<button type="button" data-go="${r.id}"><span><span class="nm-line">${esc(fullName(P(r.id)))}</span><small class="gap-line">Falta: ${esc(r.gaps.join(", "))}</small></span><span class="yrs">${esc(lifespan(P(r.id)))}</span></button>`).join("")}</div>`
+      : `<p class="hint">Nada pendente. Toda pessoa tem datas, pais e fonte do nascimento.</p>`;
+  } else {
+    const groups = new Map();
+    ids.sort((a, b) => fullName(P(a)).localeCompare(fullName(P(b)), "pt-BR")).forEach((id) => {
+      const k = (P(id).given || "?")[0].toUpperCase();
+      if (!groups.has(k)) groups.set(k, []); groups.get(k).push(id);
+    });
+    body = ids.length ? `<div class="list">${[...groups].map(([k, arr]) => `<div class="grp">${esc(k)}</div>` + arr.map((id) => `<button type="button" data-go="${id}"><span>${esc(fullName(P(id)))}</span><span class="yrs">${esc(lifespan(P(id)))}</span></button>`).join("")).join("")}</div>`
+      : `<p class="hint">Ainda não há ninguém aqui. Use “+ Pessoa” para começar.</p>`;
+  }
   el.innerHTML = `
     <div class="section">
       <p class="eyebrow">Sua árvore</p>
@@ -805,30 +1051,25 @@ function renderOverview(el) {
         <div class="stat"><b>${ids.length}</b><span>${ids.length === 1 ? "pessoa" : "pessoas"}</span></div>
         <div class="stat"><b>${gens}</b><span>${gens === 1 ? "geração" : "gerações"}</span></div>
         <div class="stat"><b>${surnames.size}</b><span>sobrenomes</span></div>
+        <div class="stat"><b>${S.media.size}</b><span>${S.media.size === 1 ? "memória" : "memórias"}</span></div>
+        <div class="stat"><b>${S.sources.size}</b><span>${S.sources.size === 1 ? "fonte" : "fontes"}</span></div>
+        <div class="stat"><b>${fs.ok}<small>/${fs.total}</small></b><span>fatos com fonte</span></div>
       </div>
     </div>
-    ${ids.length ? `<p class="hint">Toque numa pessoa na árvore para ver os dados dela e adicionar parentes.${root ? "" : " Abra a sua ficha e marque “Esta pessoa sou eu” para ver o parentesco de cada um."}</p>` : `<p class="hint">Ainda não há ninguém aqui. Use “+ Pessoa” para começar.</p>`}
-    ${ids.length ? `<div class="section"><p class="eyebrow">Todas as pessoas</p><div class="list">${[...groups].map(([k, arr]) => `<div class="grp">${esc(k)}</div>` + arr.map((id) => `<button type="button" data-go="${id}"><span>${esc(fullName(P(id)))}</span><span class="yrs">${esc(lifespan(P(id)))}</span></button>`).join("")).join("")}</div></div>` : ""}
+    ${ids.length ? `<p class="hint">Toque numa pessoa na árvore para ver a ficha, a linha do tempo, as memórias e as fontes dela.${root ? "" : " Abra a sua ficha e marque “Esta pessoa sou eu” para ver o parentesco de cada um."}</p>` : ""}
+    <div class="ptabs" role="tablist">${tabs.map(([k, l, n]) => `<button type="button" role="tab" aria-selected="${k === tab}" class="${k === tab ? "on" : ""}" data-otab="${k}">${l}${n ? ` <i>${n}</i>` : ""}</button>`).join("")}</div>
+    ${body}
   `;
 }
 
+/* ---- person ---- */
 function renderPerson(el) {
   const id = S.selected, p = P(id);
   const kin = kinship(S.settings.rootId, id);
-  const fact = (sym, label, date, place) => (date || place) ? `<div class="fact"><span class="sym">${sym}</span><div><dt>${label}</dt><dd>${date ? `<span class="date">${esc(date)}</span>` : ""}${date && place ? " · " : ""}${place ? esc(place) : ""}</dd></div></div>` : "";
-  const parents = parentsOf(id), partners = partnersOf(id), kids = childrenOf(id).sort(byBirth), sibs = siblingsOf(id).sort(byBirth);
-  const marriageExtra = (pid) => {
-    const c = coupleFamily(id, pid); if (!c) return "";
-    const f = c[1]; const y = yearOf(f.marriageDate);
-    return S.canWrite ? `<button class="mini" type="button" data-fam="${c[0]}" title="Data e local da união">⚭ ${y || "data"}</button>` : (y ? `<span class="mini">⚭ ${y}</span>` : "");
-  };
-  const facts = [
-    fact("*", "Nascimento", p.birthDate, p.birthPlace),
-    fact("†", "Falecimento", p.deathDate, p.deathPlace),
-    p.occupation ? `<div class="fact"><span class="sym">◇</span><div><dt>Ocupação</dt><dd>${esc(p.occupation)}</dd></div></div>` : "",
-  ].join("");
-  const living = p.living ? `<div class="fact"><span class="sym">○</span><div><dt>Situação</dt><dd>Vivo(a)</dd></div></div>` : "";
-  const W_ = S.canWrite;
+  const nMedia = mediaOf(id).length, nSrc = sourcesOf(id).length;
+  const tab = S.personTab;
+  const tabs = [["resumo", "Resumo", 0], ["vida", "Linha do tempo", 0], ["memorias", "Memórias", nMedia], ["fontes", "Fontes", nSrc]];
+  const body = tab === "vida" ? personTimeline(id) : tab === "memorias" ? personMedia(id) : tab === "fontes" ? personSourcesHTML(id) : personSummary(id);
   el.innerHTML = `
     <div class="ph">
       ${avatarHTML(p)}
@@ -837,10 +1078,33 @@ function renderPerson(el) {
         ${kin ? `<span class="kin">${esc(kin)}</span>` : ""}
       </div>
     </div>
-    ${(facts || living) ? `<dl class="facts">${facts}${living}</dl>` : `<p class="hint">Sem datas ou locais ainda.${W_ ? " Toque em Editar para completar." : ""}</p>`}
+    <div class="ptabs" role="tablist">${tabs.map(([k, l, n]) => `<button type="button" role="tab" aria-selected="${k === tab}" class="${k === tab ? "on" : ""}" data-ptab="${k}">${l}${n ? ` <i>${n}</i>` : ""}</button>`).join("")}</div>
+    ${body}
+  `;
+}
+function personSummary(id) {
+  const p = P(id), W_ = S.canWrite;
+  const fact = (sym, label, date, place, key) => (date || place) ? `<div class="fact"><span class="sym">${sym}</span><div><dt>${label}${key ? cite(id, key) : ""}</dt><dd>${date ? `<span class="date">${esc(date)}</span>` : ""}${date && place ? " · " : ""}${place ? esc(place) : ""}</dd></div></div>` : "";
+  const parents = parentsOf(id), partners = partnersOf(id), kids = childrenOf(id).sort(byBirth), sibs = siblingsOf(id).sort(byBirth);
+  const marriageExtra = (pid) => {
+    const c = coupleFamily(id, pid); if (!c) return "";
+    const f = c[1]; const y = yearOf(f.marriageDate);
+    const c2 = cite(id, "fam:" + c[0] + ":marriage");
+    return (W_ ? `<button class="mini" type="button" data-fam="${c[0]}" title="Data e local da união">⚭ ${y || "data"}</button>` : (y ? `<span class="mini">⚭ ${y}</span>` : "")) + c2;
+  };
+  const fsLink = p.fsid && FS_RE.test(p.fsid) ? `<div class="fact"><span class="sym fs">FS</span><div><dt>FamilySearch</dt><dd><a href="https://www.familysearch.org/tree/person/details/${p.fsid}" target="_blank" rel="noopener">Abrir a ficha ${esc(p.fsid)}</a></dd></div></div>` : "";
+  const facts = [
+    fact("*", "Nascimento", p.birthDate, p.birthPlace, id + ":birth"),
+    fact("†", "Falecimento", p.deathDate, p.deathPlace, id + ":death"),
+    p.occupation ? `<div class="fact"><span class="sym">◇</span><div><dt>Ocupação</dt><dd>${esc(p.occupation)}</dd></div></div>` : "",
+    p.living ? `<div class="fact"><span class="sym">○</span><div><dt>Situação</dt><dd>Vivo(a)</dd></div></div>` : "",
+    fsLink,
+  ].join("");
+  return `
+    ${facts ? `<dl class="facts">${facts}</dl>` : `<p class="hint">Sem datas ou locais ainda.${W_ ? " Toque em Editar dados para completar." : ""}</p>`}
     ${p.notes ? `<div class="section"><p class="eyebrow">Notas e histórias</p><p class="notes">${esc(p.notes)}</p></div>` : ""}
     ${W_ ? `<div class="actions"><button class="btn" type="button" data-act="edit">Editar dados</button>${S.settings.rootId === id ? "" : `<button class="btn ghost" type="button" data-act="me">Esta pessoa sou eu</button>`}</div>` : ""}
-    ${relSection("Pais", parents, "parent", "Nenhum pai ou mãe cadastrado.")}
+    ${relSection("Pais" + cite(id, id + ":parents"), parents, "parent", "Nenhum pai ou mãe cadastrado.")}
     ${relSection("Cônjuges", partners, "partner", "Nenhum cônjuge cadastrado.", marriageExtra)}
     ${relSection("Filhos", kids, "child", "Nenhum filho cadastrado.")}
     ${relSection("Irmãos", sibs, "sibling", "Nenhum irmão cadastrado.")}
@@ -850,10 +1114,114 @@ function renderPerson(el) {
       <button class="btn" type="button" data-add="child">+ Filho(a)</button>
       <button class="btn" type="button" data-add="sibling">+ Irmão(ã)</button>
     </div></div>` : ""}
-    ${W_ ? (v_confirm() ? `<div class="confirm"><p>Excluir <strong>${esc(fullName(p))}</strong>? As ligações com outras pessoas também serão apagadas.</p><div class="actions"><button class="btn danger solid" type="button" data-act="del-yes">Excluir</button><button class="btn" type="button" data-act="del-no">Cancelar</button></div></div>` : `<div><button class="btn danger ghost sm" type="button" data-act="del">Excluir pessoa</button></div>`) : ""}
+    ${W_ ? (v_confirm() ? `<div class="confirm"><p>Excluir <strong>${esc(fullName(p))}</strong>? As ligações com outras pessoas também serão apagadas. Memórias e fontes que só citam esta pessoa também serão excluídas.</p><div class="actions"><button class="btn danger solid" type="button" data-act="del-yes">Excluir</button><button class="btn" type="button" data-act="del-no">Cancelar</button></div></div>` : `<div><button class="btn danger ghost sm" type="button" data-act="del">Excluir pessoa</button></div>`) : ""}
   `;
 }
 const v_confirm = () => S.view.confirmDelete === true;
+
+function buildTimeline(pid) {
+  const p = P(pid), items = [];
+  const add = (o) => items.push(o);
+  const bk = dateKey(p.birthDate), dk = dateKey(p.deathDate);
+  const word = (x, m, f, u) => sexOf(P(x)) === "M" ? m : sexOf(P(x)) === "F" ? f : u;
+  if (p.birthDate || p.birthPlace) add({ date: p.birthDate, title: "Nascimento", place: p.birthPlace, key: pid + ":birth", kind: "own", sym: "*", noAge: true });
+  for (const ev of p.events || []) add({ date: ev.date, title: evTitle(ev), sub: ev.title ? EVENT_TYPES[ev.type] : "", place: ev.place, detail: ev.note, key: pid + ":ev:" + ev.id, kind: "own", sym: "•", ev: ev.id });
+  for (const [fid, f] of famsAsPartner(pid)) {
+    const o = f.partners.find((x) => x !== pid);
+    if (o && S.people.has(o) && (f.marriageDate || f.marriagePlace)) add({ date: f.marriageDate, title: `União com ${fullName(P(o))}`, place: f.marriagePlace, key: "fam:" + fid + ":marriage", kind: "own", sym: "⚭", go: o });
+  }
+  for (const c of childrenOf(pid)) {
+    const cp = P(c);
+    if (cp.birthDate) add({ date: cp.birthDate, title: `Nasce ${word(c, "o filho", "a filha", "o filho(a)")} ${fullName(cp)}`, place: cp.birthPlace, kind: "family", sym: "*", go: c });
+  }
+  const inLife = (k) => k != null && (bk == null || k >= bk) && (dk == null || k <= dk);
+  for (const par of parentsOf(pid)) {
+    const pp = P(par), k = dateKey(pp.deathDate);
+    if (inLife(k)) add({ date: pp.deathDate, title: `Morre ${word(par, "o pai", "a mãe", "o pai ou mãe")}, ${fullName(pp)}`, kind: "context", sym: "†", go: par });
+  }
+  for (const sp of partnersOf(pid)) {
+    const s = P(sp), k = dateKey(s.deathDate);
+    if (inLife(k)) add({ date: s.deathDate, title: `Morre ${word(sp, "o marido", "a esposa", "o cônjuge")}, ${fullName(s)}`, kind: "context", sym: "†", go: sp });
+  }
+  if (p.deathDate || p.deathPlace) add({ date: p.deathDate, title: "Falecimento", place: p.deathPlace, key: pid + ":death", kind: "own", sym: "†" });
+  items.forEach((it, i) => { it.k = dateKey(it.date); it.i = i; });
+  return {
+    dated: items.filter((i) => i.k != null).sort((a, b) => a.k - b.k || a.i - b.i),
+    undated: items.filter((i) => i.k == null),
+  };
+}
+function tlItemHTML(pid, it) {
+  const p = P(pid);
+  const y = yearOf(it.date);
+  const age = it.noAge ? "" : ageLabel(ageAt(p, it.date));
+  const title = it.go ? `<button class="linkish" type="button" data-go="${it.go}">${esc(it.title)}</button>` : esc(it.title);
+  const edit = it.ev && S.canWrite ? ` <button class="mini" type="button" data-ev="${it.ev}">editar</button>` : "";
+  const fullDate = it.date && String(it.date).trim() !== String(y) ? `<span>${esc(it.date)}</span>` : "";
+  return `<li class="tl-item ${it.kind}">
+    <div class="tl-date"><b>${y || "s/ data"}</b>${fullDate}</div>
+    <div class="tl-dot" aria-hidden="true">${esc(it.sym)}</div>
+    <div class="tl-body">
+      <div class="tl-title">${title}${it.key ? cite(pid, it.key) : ""}${edit}</div>
+      ${it.sub ? `<div class="tl-place">${esc(it.sub)}</div>` : ""}
+      ${it.place ? `<div class="tl-place">${esc(it.place)}</div>` : ""}
+      ${it.detail ? `<div class="tl-detail">${esc(it.detail)}</div>` : ""}
+      ${age ? `<div class="age">${age}</div>` : ""}
+    </div>
+  </li>`;
+}
+function personTimeline(id) {
+  const t = buildTimeline(id);
+  const all = [...t.dated, ...t.undated];
+  return `
+    ${S.canWrite ? `<div class="actions"><button class="btn" type="button" data-act="ev-new">+ Evento</button></div>` : ""}
+    ${all.length ? `<ol class="tl">${all.map((it) => tlItemHTML(id, it)).join("")}</ol>`
+      : `<p class="empty-rel">A linha do tempo se monta com as datas de nascimento, casamento e falecimento, os filhos e os eventos que você adicionar, como batismo, mudanças de cidade ou imigração.</p>`}
+    <p class="hint">Os números pequenos ao lado de um fato indicam as fontes que o comprovam (aba Fontes).</p>
+  `;
+}
+function thumbHTML(mid, m) {
+  const pdf = isPdfMedia(m);
+  const cap = esc(m.title || (m.kind === "document" ? "Documento" : "Foto")) + (yearOf(m.date) ? ` · ${yearOf(m.date)}` : "");
+  return `<button type="button" class="thumb ${pdf ? "pdf" : ""}" data-media="${mid}" title="${esc(m.title || "")}">
+    ${pdf ? `<span class="pdf-ico">PDF</span>` : `<img src="${esc(assetUrl(m.thumb || m.asset))}" alt="${esc(m.title || "")}" loading="lazy">`}
+    <span class="cap">${cap}</span>${m.kind === "document" && !pdf ? `<span class="badge">doc</span>` : ""}
+  </button>`;
+}
+const canUpload = () => Store.kind === "local" || !!Store.assets;
+function personMedia(id) {
+  const items = mediaOf(id);
+  const up = S.canWrite && canUpload();
+  return `
+    ${up ? `<div class="actions"><label class="btn" for="mediaFile">+ Fotos ou documentos</label></div>` : ""}
+    ${items.length ? `<div class="gallery">${items.map(([mid, m]) => thumbHTML(mid, m)).join("")}</div>`
+      : `<p class="empty-rel">Nenhuma memória ainda. Guarde aqui fotos, cartas, documentos digitalizados e PDFs. Uma foto de grupo pode ser ligada a várias pessoas.</p>`}
+  `;
+}
+function personSourcesHTML(id) {
+  const list = sourcesOf(id), W_ = S.canWrite;
+  const cat = new Map(factCatalog(id).map((f) => [f.key, f.label]));
+  const others = [...S.sources.entries()].filter(([, s]) => !(s.people || []).includes(id)).sort((a, b) => sourceTitle(a[1]).localeCompare(sourceTitle(b[1]), "pt-BR"));
+  const item = ([sid, s], i) => {
+    const facts = (s.facts || []).filter((k) => cat.has(k)).map((k) => cat.get(k));
+    const docs = [...S.media.entries()].filter(([, m]) => m.sourceId === sid);
+    const url = safeUrl(s.url);
+    return `<li class="src"><span class="n">${i + 1}</span><div class="src-body">
+      <div class="src-title">${esc(sourceTitle(s))}</div>
+      <div class="src-meta">${[s.title ? SOURCE_TYPES[s.type] : "", s.date, s.repository, s.reference].filter(Boolean).map(esc).join(" · ")}</div>
+      ${facts.length ? `<div class="src-facts">Comprova: ${esc(facts.join(", "))}</div>` : ""}
+      ${url ? `<div><a href="${esc(url)}" target="_blank" rel="noopener">Abrir o registro on-line</a></div>` : ""}
+      ${docs.length ? `<div class="gallery sm">${docs.map(([mid, m]) => thumbHTML(mid, m)).join("")}</div>` : ""}
+      ${s.transcription ? `<details><summary>Transcrição</summary><p class="notes">${esc(s.transcription)}</p></details>` : ""}
+      ${W_ ? `<div class="actions"><button class="btn sm" type="button" data-src="${sid}">Editar</button><button class="btn sm ghost" type="button" data-act="src-uncite" data-sid="${sid}">Tirar desta pessoa</button></div>` : ""}
+    </div></li>`;
+  };
+  return `
+    ${W_ ? `<div class="actions"><button class="btn" type="button" data-act="src-new">+ Nova fonte</button></div>` : ""}
+    ${W_ && others.length ? `<div class="cite-existing"><label class="sr" for="srcPick">Fonte já cadastrada</label><select id="srcPick">${others.map(([sid, s]) => `<option value="${sid}">${esc(sourceTitle(s))}</option>`).join("")}</select><button class="btn sm" type="button" data-act="src-cite">Citar esta</button></div>` : ""}
+    ${list.length ? `<ol class="srcs">${list.map(item).join("")}</ol>`
+      : `<p class="empty-rel">Nenhuma fonte ainda. Fontes são os documentos que comprovam cada informação: certidões, registros de batismo, o registro no FamilySearch, um relato da avó.</p>`}
+  `;
+}
 
 /* ---- person form ---- */
 const REL_LABEL = { parent: "pai ou mãe", partner: "cônjuge", child: "filho(a)", sibling: "irmão ou irmã" };
@@ -921,6 +1289,7 @@ function renderForm(el) {
           </div>
         </fieldset>
         <div class="field"><label for="f-occ">Ocupação</label><input type="text" id="f-occ" value="${esc(p.occupation)}" placeholder="Ex.: agricultor, costureira" autocomplete="off"></div>
+        <div class="field"><label for="f-fs">Código no FamilySearch</label><input type="text" id="f-fs" value="${esc(p.fsid || "")}" placeholder="Ex.: LZ8K-QW2" autocomplete="off"><span class="help">Aparece na página da pessoa no FamilySearch, ao lado do nome. Com ele, a ficha ganha um link direto.</span></div>
         <div class="field"><label for="f-notes">Notas e histórias</label><textarea id="f-notes" placeholder="Apelidos, de onde veio a família, histórias contadas pelos parentes…">${esc(p.notes)}</textarea></div>
         <div class="field"><span class="lbl">Foto</span>
           <div class="photo-row">${avatarHTML({ ...p, given: p.given || "?" })}
@@ -944,6 +1313,8 @@ async function submitPerson() {
   const v = S.view;
   const given = $("#f-given").value.trim(), surname = $("#f-surname").value.trim();
   if (!given && !surname) return formErr("Escreva pelo menos o nome ou o sobrenome.");
+  const fsv = $("#f-fs").value.trim().toUpperCase();
+  if (fsv && !FS_RE.test(fsv)) return formErr("O código do FamilySearch tem o formato XXXX-XXX, por exemplo LZ8K-QW2.");
   const living = $("#f-living").checked;
   const prev = v.id ? P(v.id) : {};
   const data = {
@@ -954,6 +1325,7 @@ async function submitPerson() {
     birthDate: $("#f-bd").value.trim(), birthPlace: $("#f-bp").value.trim(),
     deathDate: living ? "" : $("#f-dd").value.trim(), deathPlace: living ? "" : $("#f-dp").value.trim(),
     occupation: $("#f-occ").value.trim(), notes: $("#f-notes").value.trim(),
+    fsid: $("#f-fs").value.trim().toUpperCase(),
     photo: v.photo !== undefined ? v.photo : (prev.photo || null),
     updated: Date.now(),
   };
@@ -966,7 +1338,7 @@ async function submitPerson() {
     S.people.set(id, data); // optimistic, so relation helpers see the new person
     if (!v.id && v.rel) await linkRelation(v.rel, v.of, id, famChoice);
     if ($("#f-me") && $("#f-me").checked) await putSettings({ ...S.settings, rootId: id });
-    if (v.id && prev.photo && prev.photo !== data.photo && !prev.photo.startsWith("data:") && Store.assets) Store.assets.delete(prev.photo).catch(() => {});
+    if (v.id && prev.photo && prev.photo !== data.photo) dropAsset(prev.photo);
     S.view = { mode: "person" }; S.selected = id;
     renderAll(); centerOn(id);
     toast(v.id ? "Dados salvos" : `${fullName(data)} adicionado(a) à árvore`);
@@ -1023,7 +1395,7 @@ async function onPhoto(file) {
     renderPanel(); writeForm(keep); toast("Foto pronta. Clique em Salvar para guardar.");
   } catch (e) { formErr(e.message || "Não consegui enviar a foto."); }
 }
-const FORM_IDS = ["f-given", "f-surname", "f-bd", "f-bp", "f-dd", "f-dp", "f-occ", "f-notes"];
+const FORM_IDS = ["f-given", "f-surname", "f-bd", "f-bp", "f-dd", "f-dp", "f-occ", "f-fs", "f-notes"];
 function readForm() {
   const o = {}; FORM_IDS.forEach((i) => { const e = document.getElementById(i); if (e) o[i] = e.value; });
   o.sex = (document.querySelector("input[name=sex]:checked") || {}).value; o.living = $("#f-living")?.checked; o.fam = $("#f-fam")?.value; o.me = $("#f-me")?.checked;
@@ -1054,12 +1426,361 @@ function renderFamilyForm(el) {
     </form>`;
 }
 
+/* ---- event form ---- */
+function renderEventForm(el) {
+  const v = S.view, p = P(v.pid);
+  if (!p) { S.view = { mode: "overview" }; return renderPanel(); }
+  const ev = v.evId ? (p.events || []).find((e) => e.id === v.evId) : null;
+  const e0 = ev || { type: "baptism", title: "", date: "", place: "", note: "" };
+  el.innerHTML = `
+    <h2 class="form-title">${ev ? "Editar evento" : "Novo evento"}</h2>
+    <p class="hint">Na vida de ${esc(fullName(p))}</p>
+    <form id="eventForm" novalidate>
+      <div class="field"><label for="e-type">Tipo</label><select id="e-type">${Object.entries(EVENT_TYPES).map(([k, l]) => `<option value="${k}" ${k === e0.type ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+      <div class="field"><label for="e-title">Título (opcional)</label><input type="text" id="e-title" value="${esc(e0.title)}" placeholder="Ex.: Chegada ao porto de Santos" autocomplete="off"></div>
+      <div class="row">
+        <div class="field"><label for="e-date">Data</label><input type="text" id="e-date" value="${esc(e0.date)}" placeholder="03/1952" autocomplete="off"></div>
+        <div class="field"><label for="e-place">Local</label><input type="text" id="e-place" value="${esc(e0.place)}" placeholder="Cidade, país" autocomplete="off"></div>
+      </div>
+      <div class="field"><label for="e-note">Detalhes</label><textarea id="e-note" placeholder="Navio, padrinhos, escola, endereço…">${esc(e0.note)}</textarea></div>
+      <p class="err" id="formErr" hidden></p>
+      <div class="actions"><button class="btn primary" type="submit">Salvar</button><button class="btn" type="button" data-act="cancel">Cancelar</button>${ev ? `<button class="btn danger ghost" type="button" data-act="ev-del" data-confirm="1">Excluir evento</button>` : ""}</div>
+    </form>`;
+}
+async function submitEvent() {
+  const v = S.view, p = P(v.pid);
+  const data = { id: v.evId || uid("e"), type: $("#e-type").value, title: $("#e-title").value.trim(), date: $("#e-date").value.trim(), place: $("#e-place").value.trim(), note: $("#e-note").value.trim() };
+  const events = [...(p.events || [])];
+  const i = events.findIndex((e) => e.id === data.id);
+  if (i >= 0) events[i] = data; else events.push(data);
+  await putPerson(v.pid, { ...p, events, updated: Date.now() });
+  S.view = { mode: "person" }; S.personTab = "vida"; renderAll(); toast("Evento salvo");
+}
+async function deleteEvent() {
+  const v = S.view, p = P(v.pid);
+  await putPerson(v.pid, { ...p, events: (p.events || []).filter((e) => e.id !== v.evId), updated: Date.now() });
+  const key = v.pid + ":ev:" + v.evId;
+  for (const [sid, s] of [...S.sources]) if ((s.facts || []).includes(key)) await putSource(sid, { ...s, facts: s.facts.filter((k) => k !== key) });
+  S.view = { mode: "person" }; renderAll(); toast("Evento excluído");
+}
+
+/* ---- source form ---- */
+function defaultFacts(type, pid) {
+  const keys = [];
+  if (["birthCert", "baptism"].includes(type)) keys.push(pid + ":birth", pid + ":parents");
+  if (type === "deathCert") keys.push(pid + ":death");
+  if (type === "marriageCert") { const f = famsAsPartner(pid).find(([, f]) => f.partners.length === 2); if (f) keys.push("fam:" + f[0] + ":marriage"); }
+  if (type === "baptism") { const ev = (P(pid).events || []).find((e) => e.type === "baptism"); if (ev) keys.push(pid + ":ev:" + ev.id); }
+  return keys;
+}
+function renderSourceForm(el) {
+  const v = S.view, p = P(v.pid);
+  if (!p) { S.view = { mode: "overview" }; return renderPanel(); }
+  const exists = S.sources.has(v.sid);
+  const s = S.sources.get(v.sid) || { type: v.type || "birthCert", title: "", date: "", repository: "", reference: "", url: "", transcription: "", facts: defaultFacts(v.type || "birthCert", v.pid) };
+  const cat = factCatalog(v.pid);
+  const docs = [...S.media.entries()].filter(([, m]) => m.sourceId === v.sid);
+  const others = (s.people || []).filter((x) => x !== v.pid && S.people.has(x));
+  el.innerHTML = `
+    <h2 class="form-title">${exists ? "Editar fonte" : "Nova fonte"}</h2>
+    <p class="hint">Para ${esc(fullName(p))}${others.length ? `. Também citada para ${others.map((x) => esc(fullName(P(x)))).join(", ")}.` : ""}</p>
+    <form id="sourceForm" novalidate>
+      <div class="field"><label for="s-type">Tipo de fonte</label><select id="s-type">${Object.entries(SOURCE_TYPES).map(([k, l]) => `<option value="${k}" ${k === s.type ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+      <div class="field"><label for="s-title">Título (opcional)</label><input type="text" id="s-title" value="${esc(s.title)}" placeholder="Ex.: Certidão de nascimento de ${esc(p.given || "Ana")}" autocomplete="off"></div>
+      <div class="row">
+        <div class="field"><label for="s-date">Data do documento</label><input type="text" id="s-date" value="${esc(s.date)}" placeholder="1931" autocomplete="off"></div>
+        <div class="field"><label for="s-ref">Livro, folha, termo</label><input type="text" id="s-ref" value="${esc(s.reference)}" placeholder="Livro A-12, fl. 34, nº 210" autocomplete="off"></div>
+      </div>
+      <div class="field"><label for="s-repo">Onde está</label><input type="text" id="s-repo" value="${esc(s.repository)}" placeholder="Cartório, paróquia, arquivo, com a tia Lúcia…" autocomplete="off"></div>
+      <div class="field"><label for="s-url">Link (opcional)</label><input type="text" id="s-url" value="${esc(s.url)}" placeholder="https://www.familysearch.org/ark:/…" autocomplete="off" inputmode="url"></div>
+      <fieldset><legend>O que esta fonte comprova</legend>
+        <div class="checks">${cat.map((f) => `<label class="check"><input type="checkbox" name="sfact" value="${esc(f.key)}" ${(s.facts || []).includes(f.key) ? "checked" : ""}> ${esc(f.label)}</label>`).join("")}</div>
+      </fieldset>
+      <div class="field"><label for="s-trans">Transcrição ou anotações</label><textarea id="s-trans" placeholder="Copie aqui o texto do documento, nomes de padrinhos, testemunhas…">${esc(s.transcription)}</textarea></div>
+      <div class="field"><span class="lbl">Imagem ou PDF do documento</span>
+        ${docs.length ? `<div class="gallery sm">${docs.map(([mid, m]) => thumbHTML(mid, m)).join("")}</div>` : ""}
+        ${canUpload() ? `<div><label class="btn sm" for="srcFile">Anexar arquivo</label></div>` : `<span class="hint">Anexos indisponíveis aqui.</span>`}
+      </div>
+      <p class="err" id="formErr" hidden></p>
+      <div class="actions"><button class="btn primary" type="submit" id="srcSave">Salvar fonte</button><button class="btn" type="button" data-act="cancel">Cancelar</button>${exists ? `<button class="btn danger ghost" type="button" data-act="src-del" data-confirm="1">Excluir fonte</button>` : ""}</div>
+    </form>`;
+}
+function snapForm(id) {
+  const f = document.getElementById(id); if (!f) return null;
+  return [...f.querySelectorAll("input, select, textarea")].map((e) => [e.id || e.name + ":" + e.value, e.type === "checkbox" || e.type === "radio" ? e.checked : e.value]);
+}
+function restoreForm(id, snap) {
+  const f = document.getElementById(id); if (!f || !snap) return;
+  const els = [...f.querySelectorAll("input, select, textarea")];
+  for (const [k, val] of snap) {
+    const e = els.find((x) => (x.id || x.name + ":" + x.value) === k); if (!e || e.type === "file") continue;
+    if (e.type === "checkbox" || e.type === "radio") e.checked = val; else e.value = val;
+  }
+}
+async function submitSource() {
+  const v = S.view, pid = v.pid;
+  const prev = S.sources.get(v.sid) || { people: [], facts: [], created: Date.now() };
+  const offered = new Set(factCatalog(pid).map((f) => f.key));
+  const checked = [...document.querySelectorAll("input[name=sfact]:checked")].map((i) => i.value);
+  const facts = [...new Set((prev.facts || []).filter((k) => !offered.has(k)).concat(checked))];
+  const people = new Set(prev.people || []); people.add(pid);
+  for (const k of checked) { const m = k.match(/^fam:(.+):marriage$/); if (m && S.families.has(m[1])) S.families.get(m[1]).partners.forEach((x) => people.add(x)); }
+  const url = $("#s-url").value.trim();
+  if (url && !safeUrl(url)) return formErr("O link precisa começar com https:// ou http://");
+  const data = {
+    ...prev, type: $("#s-type").value, title: $("#s-title").value.trim(), date: $("#s-date").value.trim(),
+    reference: $("#s-ref").value.trim(), repository: $("#s-repo").value.trim(), url,
+    transcription: $("#s-trans").value.trim(), facts, people: [...people], updated: Date.now(),
+  };
+  $("#srcSave").disabled = true;
+  try { await putSource(v.sid, data); S.view = { mode: "person" }; S.personTab = "fontes"; renderAll(); toast("Fonte salva"); }
+  catch (e) { $("#srcSave").disabled = false; formErr(dbMsg(e)); }
+}
+async function deleteSource(sid) {
+  for (const [mid, m] of [...S.media]) if (m.sourceId === sid) await putMedia(mid, { ...m, sourceId: null });
+  await Store.del("sources", sid);
+}
+async function uncite(sid, pid) {
+  const s = S.sources.get(sid); if (!s) return;
+  const people = (s.people || []).filter((x) => x !== pid);
+  const famKeys = new Set(famsAsPartner(pid).map(([fid]) => "fam:" + fid + ":marriage"));
+  const facts = (s.facts || []).filter((k) => !k.startsWith(pid + ":") && !famKeys.has(k));
+  if (people.length) await putSource(sid, { ...s, people, facts }); else await deleteSource(sid);
+}
+
+/* ---- memories: upload ---- */
+async function uploadFiles(files, { pid, sourceId }) {
+  const list = [...files];
+  const made = [];
+  for (let i = 0; i < list.length; i++) {
+    const file = list[i];
+    const pdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+    const img = (file.type || "").startsWith("image/");
+    if (!pdf && !img) { toast(`“${file.name}” não é imagem nem PDF.`); continue; }
+    if (list.length > 1) toast(`Enviando ${i + 1} de ${list.length}…`); else toast("Enviando…");
+    let asset, thumb = null, mime;
+    if (Store.kind === "db") {
+      if (!Store.assets) throw new Error("Envio de arquivos indisponível aqui.");
+      if (pdf) {
+        if (file.size > 20 * 1024 * 1024) { toast(`“${file.name}” passa de 20 MB.`); continue; }
+        asset = (await Store.assets.upload(file, { type: "application/pdf" })).id; mime = "application/pdf";
+      } else {
+        const big = await shrinkImage(file, 1800), small = await shrinkImage(file, 360);
+        asset = (await Store.assets.upload(big.blob, { type: "image/jpeg" })).id;
+        thumb = (await Store.assets.upload(small.blob, { type: "image/jpeg" })).id;
+        mime = "image/jpeg";
+      }
+    } else {
+      if (pdf) { toast("No modo local não dá para guardar PDF. Use a página publicada."); continue; }
+      asset = (await shrinkImage(file, 900)).dataUrl; mime = "image/jpeg";
+    }
+    const mid = uid("m");
+    await putMedia(mid, {
+      kind: sourceId || pdf ? "document" : "photo", title: file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim(),
+      date: "", place: "", note: "", people: [pid], asset, thumb, mime, sourceId: sourceId || null, created: Date.now(),
+    });
+    made.push(mid);
+  }
+  return made;
+}
+
+/* ---- memories: viewer ---- */
+function openLB(mid, list) {
+  S.lb = { mid, list: list && list.length ? list : [mid], editing: false, confirm: false };
+  $("#lb").hidden = false; renderLB();
+  $("#lb .lb-close").focus();
+}
+function closeLB() { S.lb = null; $("#lb").hidden = true; }
+function stepLB(d) {
+  if (!S.lb || S.lb.list.length < 2) return;
+  const i = S.lb.list.indexOf(S.lb.mid);
+  S.lb.mid = S.lb.list[(i + d + S.lb.list.length) % S.lb.list.length]; S.lb.editing = false; S.lb.confirm = false; renderLB();
+}
+function renderLB() {
+  if (!S.lb) return;
+  const m = S.media.get(S.lb.mid);
+  if (!m) { closeLB(); return; }
+  const pdf = isPdfMedia(m), W_ = S.canWrite;
+  const many = S.lb.list.length > 1;
+  $("#lbPrev").hidden = $("#lbNext").hidden = !many;
+  $("#lbCount").textContent = many ? `${S.lb.list.indexOf(S.lb.mid) + 1} de ${S.lb.list.length}` : "";
+  $("#lbMedia").innerHTML = pdf
+    ? `<div class="lb-pdf"><span class="pdf-ico big">PDF</span><a class="btn primary" href="${esc(assetUrl(m.asset))}" target="_blank" rel="noopener">Abrir o PDF</a></div>`
+    : `<img src="${esc(assetUrl(m.asset))}" alt="${esc(m.title || "")}">`;
+  const people = (m.people || []).filter((x) => S.people.has(x));
+  const notIn = [...S.people.keys()].filter((x) => !people.includes(x)).sort((a, b) => fullName(P(a)).localeCompare(fullName(P(b)), "pt-BR"));
+  const src = m.sourceId && S.sources.get(m.sourceId);
+  const info = $("#lbInfo");
+  if (S.lb.editing) {
+    info.innerHTML = `
+      <h2 class="form-title">Editar memória</h2>
+      <form id="mediaForm" novalidate>
+        <div class="field"><label for="md-title">Título</label><input type="text" id="md-title" value="${esc(m.title)}" autocomplete="off"></div>
+        <div class="field"><span class="lbl" id="mdKind">Tipo</span>
+          <div class="seg" role="radiogroup" aria-labelledby="mdKind">
+            <input type="radio" name="mdkind" id="mk-photo" value="photo" ${m.kind !== "document" ? "checked" : ""}><label for="mk-photo">Foto</label>
+            <input type="radio" name="mdkind" id="mk-doc" value="document" ${m.kind === "document" ? "checked" : ""}><label for="mk-doc">Documento</label>
+          </div></div>
+        <div class="row">
+          <div class="field"><label for="md-date">Data</label><input type="text" id="md-date" value="${esc(m.date)}" placeholder="c. 1960" autocomplete="off"></div>
+          <div class="field"><label for="md-place">Local</label><input type="text" id="md-place" value="${esc(m.place)}" placeholder="Cidade" autocomplete="off"></div>
+        </div>
+        <div class="field"><label for="md-note">Descrição</label><textarea id="md-note" placeholder="Quem aparece, da esquerda para a direita; a ocasião; quem guardava a foto…">${esc(m.note)}</textarea></div>
+        <div class="actions"><button class="btn primary" type="submit">Salvar</button><button class="btn" type="button" data-act="lb-cancel">Cancelar</button></div>
+      </form>`;
+    const t = $("#md-title"); if (t && !isPhone()) t.focus();
+    return;
+  }
+  const sel = S.selected && people.includes(S.selected) ? S.selected : null;
+  info.innerHTML = `
+    <div>
+      <p class="eyebrow">${m.kind === "document" ? "Documento" : "Foto"}</p>
+      <h2 class="form-title">${esc(m.title || "Sem título")}</h2>
+      ${(m.date || m.place) ? `<p class="lb-meta">${[m.date, m.place].filter(Boolean).map(esc).join(" · ")}</p>` : ""}
+    </div>
+    ${m.note ? `<p class="notes">${esc(m.note)}</p>` : ""}
+    ${src ? `<p class="hint">Anexo da fonte <strong>${esc(sourceTitle(src))}</strong></p>` : ""}
+    <div class="section"><p class="eyebrow">Pessoas nesta ${m.kind === "document" ? "memória" : "foto"}</p>
+      <div class="chips">${people.map((x) => {
+        const p = P(x);
+        const un = W_ && people.length > 1 ? `<button class="x" type="button" data-act="lb-unlink" data-pid="${x}" title="Tirar esta pessoa" aria-label="Tirar ${esc(fullName(p))}">✕</button>` : "";
+        return `<div class="chip"><span class="dot ${sexOf(p)}"></span><button class="who" type="button" data-go="${x}"><strong>${esc(fullName(p))}</strong><span>${esc(lifespan(p) || " ")}</span></button>${un}</div>`;
+      }).join("")}</div>
+      ${W_ && notIn.length ? `<div class="cite-existing"><label class="sr" for="lbAdd">Ligar outra pessoa</label><select id="lbAdd">${notIn.map((x) => `<option value="${x}">${esc(fullName(P(x)))}</option>`).join("")}</select><button class="btn sm" type="button" data-act="lb-link">Ligar</button></div>` : ""}
+    </div>
+    <div class="actions">
+      ${W_ ? `<button class="btn" type="button" data-act="lb-edit">Editar legenda</button>` : ""}
+      ${W_ && sel && !pdf ? `<button class="btn" type="button" data-act="lb-photo">Usar como foto de ${esc(P(sel).given || "perfil")}</button>` : ""}
+      ${Store.downloads ? `<button class="btn ghost" type="button" data-act="lb-download">Baixar</button>` : ""}
+    </div>
+    ${W_ ? (S.lb.confirm ? `<div class="confirm"><p>Excluir esta memória para todas as pessoas ligadas a ela?</p><div class="actions"><button class="btn danger solid" type="button" data-act="lb-del-yes">Excluir</button><button class="btn" type="button" data-act="lb-del-no">Cancelar</button></div></div>`
+      : `<div><button class="btn danger ghost sm" type="button" data-act="lb-del">Excluir memória</button></div>`) : ""}
+  `;
+}
+async function lbAction(act, t) {
+  const mid = S.lb && S.lb.mid, m = mid && S.media.get(mid);
+  if (!m) return;
+  switch (act) {
+    case "lb-edit": S.lb.editing = true; renderLB(); break;
+    case "lb-cancel": S.lb.editing = false; renderLB(); break;
+    case "lb-del": S.lb.confirm = true; renderLB(); break;
+    case "lb-del-no": S.lb.confirm = false; renderLB(); break;
+    case "lb-del-yes": {
+      await Store.del("media", mid);
+      dropAsset(m.asset, { media: mid }); dropAsset(m.thumb, { media: mid });
+      S.lb.list = S.lb.list.filter((x) => x !== mid);
+      if (S.lb.list.length) { S.lb.mid = S.lb.list[0]; S.lb.confirm = false; renderLB(); } else closeLB();
+      renderPanel(); toast("Memória excluída");
+      break;
+    }
+    case "lb-link": {
+      const pid = $("#lbAdd").value;
+      await putMedia(mid, { ...m, people: [...new Set([...(m.people || []), pid])] }); toast(`${fullName(P(pid))} ligado(a) a esta memória`);
+      break;
+    }
+    case "lb-unlink": await putMedia(mid, { ...m, people: (m.people || []).filter((x) => x !== t.dataset.pid) }); break;
+    case "lb-photo": {
+      const pid = S.selected, p = P(pid), old = p.photo;
+      const photo = m.thumb || m.asset;
+      await putPerson(pid, { ...p, photo, updated: Date.now() });
+      if (old && old !== photo) dropAsset(old, { person: pid });
+      toast("Foto de perfil atualizada");
+      break;
+    }
+    case "lb-download": {
+      try {
+        const blob = await (await fetch(assetUrl(m.asset))).blob();
+        const ext = isPdfMedia(m) ? "pdf" : "jpg";
+        await Store.downloads.save({ filename: `${(m.title || "memoria").replace(/[\\/:*?"<>|]+/g, " ").trim() || "memoria"}.${ext}`, data: blob });
+      } catch (e) { if (!e || e.code !== "declined") toast("Não consegui baixar o arquivo."); }
+      break;
+    }
+  }
+}
+
+/* ---- new handlers (phase 2) ---- */
+document.addEventListener("click", async (e) => {
+  const t = e.target.closest("button"); if (!t) return;
+  try {
+    if (t.dataset.go && t.closest("#lb")) { closeLB(); return; }
+    if (t.dataset.ptab) { S.personTab = t.dataset.ptab; renderPanel(); return; }
+    if (t.dataset.otab) { S.overviewTab = t.dataset.otab; renderPanel(); return; }
+    if (t.dataset.media) {
+      const scope = t.closest(".gallery");
+      const list = scope ? [...scope.querySelectorAll("[data-media]")].map((b) => b.dataset.media) : [t.dataset.media];
+      openLB(t.dataset.media, list); return;
+    }
+    if (t.dataset.lb === "close") return closeLB();
+    if (t.dataset.lb === "prev") return stepLB(-1);
+    if (t.dataset.lb === "next") return stepLB(1);
+    if (t.dataset.ev) { S.view = { mode: "event", pid: S.selected, evId: t.dataset.ev }; renderPanel(); return; }
+    if (t.dataset.src) { S.view = { mode: "source", pid: S.selected, sid: t.dataset.src }; renderPanel(); return; }
+    const act = t.dataset.act; if (!act) return;
+    if (t.dataset.confirm && !t.dataset.armed) { t.dataset.armed = "1"; t.textContent = "Clique de novo para excluir"; t.classList.add("solid"); return; }
+    if (act.startsWith("lb-")) return await lbAction(act, t);
+    switch (act) {
+      case "ev-new": S.view = { mode: "event", pid: S.selected }; renderPanel(); break;
+      case "ev-del": await deleteEvent(); break;
+      case "src-new": S.view = { mode: "source", pid: S.selected, sid: uid("s") }; renderPanel(); break;
+      case "src-cite": {
+        const sid = $("#srcPick").value, s = S.sources.get(sid);
+        await putSource(sid, { ...s, people: [...new Set([...(s.people || []), S.selected])] });
+        S.view = { mode: "source", pid: S.selected, sid }; renderPanel(); break;
+      }
+      case "src-uncite": await uncite(t.dataset.sid, S.selected); toast("Fonte retirada desta pessoa"); break;
+      case "src-del": { const sid = S.view.sid; await deleteSource(sid); S.view = { mode: "person" }; renderAll(); toast("Fonte excluída"); break; }
+    }
+  } catch (err) { toast(dbMsg(err)); }
+});
+document.addEventListener("submit", async (e) => {
+  try {
+    if (e.target.id === "eventForm") await submitEvent();
+    if (e.target.id === "sourceForm") await submitSource();
+    if (e.target.id === "mediaForm") {
+      const m = S.media.get(S.lb.mid);
+      await putMedia(S.lb.mid, { ...m, title: $("#md-title").value.trim(), kind: (document.querySelector("input[name=mdkind]:checked") || {}).value || m.kind, date: $("#md-date").value.trim(), place: $("#md-place").value.trim(), note: $("#md-note").value.trim() });
+      S.lb.editing = false; renderLB(); renderPanel(); toast("Memória salva");
+    }
+  } catch (err) { formErr(dbMsg(err)); }
+});
+document.addEventListener("change", async (e) => {
+  if (e.target.id === "s-type" && !S.sources.has(S.view.sid)) {
+    const keys = new Set(defaultFacts(e.target.value, S.view.pid));
+    document.querySelectorAll("input[name=sfact]").forEach((c) => { c.checked = keys.has(c.value); });
+  }
+  if (e.target.id === "mediaFile" || e.target.id === "srcFile") {
+    const files = e.target.files; const which = e.target.id;
+    if (!files || !files.length) return;
+    try {
+      if (which === "mediaFile") {
+        const made = await uploadFiles(files, { pid: S.selected });
+        e.target.value = "";
+        if (made.length) { S.personTab = "memorias"; toast(made.length === 1 ? "Memória guardada. Escreva uma legenda." : `${made.length} memórias guardadas`); renderPanel(); if (made.length === 1) { openLB(made[0], mediaOf(S.selected).map(([id]) => id)); S.lb.editing = true; renderLB(); } }
+      } else {
+        const snap = snapForm("sourceForm");
+        const made = await uploadFiles(files, { pid: S.view.pid, sourceId: S.view.sid });
+        e.target.value = "";
+        renderPanel(); restoreForm("sourceForm", snap);
+        if (made.length) toast("Arquivo anexado. Lembre de salvar a fonte.");
+      }
+    } catch (err) { e.target.value = ""; toast(err && err.message ? err.message : dbMsg(err)); }
+  }
+});
+document.addEventListener("keydown", (e) => {
+  if (!S.lb || $("#lb").hidden) return;
+  if (e.key === "Escape") { if (S.lb.editing) { S.lb.editing = false; renderLB(); } else closeLB(); }
+  if (S.lb.editing || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  if (e.key === "ArrowLeft") stepLB(-1);
+  if (e.key === "ArrowRight") stepLB(1);
+});
+
 /* ================= export / import ================= */
 function exportData() {
   return {
-    app: "raizes-da-familia", version: 1, exportedAt: new Date().toISOString(),
+    app: "raizes-da-familia", version: 2, exportedAt: new Date().toISOString(),
     settings: S.settings,
     people: Object.fromEntries(S.people), families: Object.fromEntries(S.families),
+    media: Object.fromEntries(S.media), sources: Object.fromEntries(S.sources),
   };
 }
 async function offerFile(filename, text, label, okMsg) {
@@ -1082,7 +1803,7 @@ function renderRestore(el) {
   const v = S.view;
   el.innerHTML = `
     <h2 style="margin:0;font-family:var(--font-display);font-size:20px">Restaurar cópia</h2>
-    <p>O arquivo tem <strong>${v.np}</strong> pessoas e <strong>${v.nf}</strong> uniões. Elas serão juntadas à árvore atual; quem tiver o mesmo código interno será substituído pela versão do arquivo.</p>
+    <p>O arquivo tem <strong>${v.np}</strong> pessoas, <strong>${v.nf}</strong> uniões, <strong>${v.ns}</strong> fontes e <strong>${v.nm}</strong> memórias. Elas serão juntadas à árvore atual; quem tiver o mesmo código interno será substituído pela versão do arquivo.</p>
     <div class="actions"><button class="btn primary" type="button" data-act="restore-yes">Restaurar</button><button class="btn" type="button" data-act="cancel">Cancelar</button></div>`;
 }
 async function doRestore() {
@@ -1091,6 +1812,8 @@ async function doRestore() {
   try {
     for (const [id, p] of Object.entries(d.people || {})) await putPerson(id, p);
     for (const [id, f] of Object.entries(d.families || {})) await putFamily(id, { partners: f.partners || [], children: f.children || [], marriageDate: f.marriageDate || "", marriagePlace: f.marriagePlace || "" });
+    for (const [id, x] of Object.entries(d.sources || {})) await putSource(id, x);
+    for (const [id, x] of Object.entries(d.media || {})) await putMedia(id, x);
     if (d.settings && d.settings.rootId && !S.settings.rootId) await putSettings({ ...S.settings, rootId: d.settings.rootId });
     S.view = { mode: "overview" }; S.fittedOnce = false; renderAll(); toast("Cópia restaurada");
   } catch (e) { toast(dbMsg(e)); }
@@ -1191,7 +1914,7 @@ $("#restoreFile").addEventListener("change", async (e) => {
   try {
     const d = JSON.parse(await f.text());
     if (!d || typeof d.people !== "object") throw new Error();
-    S.view = { mode: "restore", data: d, np: Object.keys(d.people).length, nf: Object.keys(d.families || {}).length };
+    S.view = { mode: "restore", data: d, np: Object.keys(d.people).length, nf: Object.keys(d.families || {}).length, ns: Object.keys(d.sources || {}).length, nm: Object.keys(d.media || {}).length };
     setSheet(true); renderPanel();
   } catch (err) { toast("Esse arquivo não é uma cópia de segurança desta árvore."); }
 });
@@ -1268,7 +1991,8 @@ function renderAll() {
   if (S.selected && !S.people.has(S.selected)) { S.selected = null; S.view = { mode: "overview" }; }
   if (typeof dagre === "undefined" && has) showNotice("Não consegui carregar o desenho da árvore. Recarregue a página.", 0);
   renderTree();
-  if (!["edit", "family", "restore", "export"].includes(S.view.mode)) renderPanel();
+  if (!["edit", "family", "event", "source", "restore", "export"].includes(S.view.mode)) renderPanel();
+  if (S.lb && !S.lb.editing) renderLB();
 }
 
 renderPanel();
